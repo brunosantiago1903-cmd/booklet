@@ -28,7 +28,7 @@ class CadastroSyncService
 {
     /**
      * @param  array<string,mixed>  $payload
-     * @return array<string,mixed>  Resumo do processamento (por item).
+     * @return array<string,mixed> Resumo do processamento (por item).
      */
     public function processarLote(array $payload, User $operador): array
     {

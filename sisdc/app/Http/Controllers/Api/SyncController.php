@@ -13,9 +13,7 @@ use Illuminate\Http\Request;
 
 class SyncController extends Controller
 {
-    public function __construct(private readonly CadastroSyncService $service)
-    {
-    }
+    public function __construct(private readonly CadastroSyncService $service) {}
 
     /**
      * Recebe o lote (push) de cadastros coletados offline no tablet.

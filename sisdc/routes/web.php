@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\ColetaController;
+use App\Livewire\Auditoria;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -23,4 +25,12 @@ Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->
 Route::middleware('auth')->group(function (): void {
     // Mapa interativo de risco - acessivel a todos os perfis autenticados.
     Route::view('/painel/mapa', 'mapa.index')->name('mapa');
+
+    // Auditoria - valida/rejeita cadastros (administrador, auditor).
+    Route::get('/painel/auditoria', Auditoria::class)
+        ->middleware('role:administrador,auditor')->name('auditoria');
+
+    // Coleta de campo (Wizard offline-first) - administrador, operador.
+    Route::get('/coleta', [ColetaController::class, 'index'])
+        ->middleware('role:administrador,operador')->name('coleta');
 });
