@@ -1,0 +1,87 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Feature;
+
+use App\Enums\Role;
+use App\Models\Cadastro;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
+use Tests\TestCase;
+
+/**
+ * Testes do endpoint de sincronizacao offline.
+ *
+ * Requer banco PostgreSQL com PostGIS habilitado (a coluna geography e
+ * escrita via ST_MakePoint). Configure phpunit.xml com a conexao de teste.
+ */
+class SyncCadastroTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private function operador(): User
+    {
+        return User::factory()->create(['role' => Role::OPERADOR]);
+    }
+
+    private function payloadValido(string $uuid): array
+    {
+        return [
+            'batch_uuid' => (string) Str::uuid(),
+            'device_id' => 'tablet-teste-01',
+            'cadastros' => [[
+                'client_uuid' => $uuid,
+                'updated_at_client' => now()->toIso8601String(),
+                'nome_familia' => 'Familia Silva',
+                'latitude' => -25.4767,
+                'longitude' => -48.8344,
+                'areas_atencao' => ['deslizamento'],
+                'historico_riscos' => [[
+                    'client_uuid' => (string) Str::uuid(),
+                    'tipo_evento' => 'deslizamento',
+                    'criticidade' => 'alto',
+                    'avaliado_em' => now()->toIso8601String(),
+                ]],
+            ]],
+        ];
+    }
+
+    public function test_operador_sincroniza_cadastro_e_define_criticidade(): void
+    {
+        $uuid = (string) Str::uuid();
+
+        $resp = $this->actingAs($this->operador(), 'sanctum')
+            ->postJson('/api/v1/sync/cadastros', $this->payloadValido($uuid));
+
+        $resp->assertStatus(207);
+        $this->assertDatabaseHas('cadastros', [
+            'client_uuid' => $uuid,
+            'criticidade_atual' => 'alto',
+            'status' => 'sincronizado',
+        ]);
+    }
+
+    public function test_reenvio_do_mesmo_uuid_e_idempotente(): void
+    {
+        $uuid = (string) Str::uuid();
+        $payload = $this->payloadValido($uuid);
+
+        $this->actingAs($this->operador(), 'sanctum')
+            ->postJson('/api/v1/sync/cadastros', $payload)->assertStatus(207);
+        $this->actingAs($this->operador(), 'sanctum')
+            ->postJson('/api/v1/sync/cadastros', $payload)->assertStatus(207);
+
+        $this->assertSame(1, Cadastro::where('client_uuid', $uuid)->count());
+    }
+
+    public function test_auditor_nao_pode_sincronizar(): void
+    {
+        $auditor = User::factory()->create(['role' => Role::AUDITOR]);
+
+        $this->actingAs($auditor, 'sanctum')
+            ->postJson('/api/v1/sync/cadastros', $this->payloadValido((string) Str::uuid()))
+            ->assertForbidden();
+    }
+}
