@@ -8,6 +8,7 @@ use App\Enums\Criticidade;
 use App\Enums\StatusCadastro;
 use App\Models\Cadastro;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -34,5 +35,21 @@ class CadastroFactory extends Factory
     public function validado(): static
     {
         return $this->state(fn (): array => ['status' => StatusCadastro::VALIDADO->value, 'validado_em' => now()]);
+    }
+
+    /**
+     * Preenche a coluna geography a partir de latitude/longitude apos criar,
+     * espelhando o que o CadastroSyncService faz em producao.
+     */
+    public function configure(): static
+    {
+        return $this->afterCreating(function (Cadastro $cadastro): void {
+            if ($cadastro->latitude !== null && $cadastro->longitude !== null) {
+                DB::statement(
+                    'UPDATE cadastros SET localizacao = ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography WHERE id = ?',
+                    [$cadastro->longitude, $cadastro->latitude, $cadastro->id],
+                );
+            }
+        });
     }
 }

@@ -37,15 +37,26 @@ function cadastroVazio() {
         historico_riscos: [],
         vulnerabilidade_saude: {
             necessidades_especiais: '', necessita_medicacao: null, medicacao_qual: '',
-            doenca_cronica: null, doenca_cronica_qual: '', alergias: '',
-            animais_caes: 0, animais_gatos: 0, animais_aves: 0,
+            restricao_medicamento: '', doenca_cronica: null, doenca_cronica_qual: '',
+            alergias: '', animais_caes: 0, animais_gatos: 0, animais_aves: 0, animais_outros: '',
         },
         infraestrutura: {
-            captacao_agua: '', coleta_lixo: null, saneamento_tipo: '',
+            captacao_agua: '', captacao_agua_outro: '', poco_profundidade_m: null,
+            coleta_lixo: null, lixo_organico_destino: '', lixo_reciclavel_destino: '',
+            coleta_seletiva_proxima: null, saneamento_tipo: '', saneamento_qual: '',
         },
         risco_ambiental: {
-            potencialmente_inundavel: null, historico_deslizamento: null,
-            risco_deslizamento_atual: null, rio_passa_propriedade: null,
+            potencialmente_inundavel: null, escoamento_propriedade: '', escoamento_rua: null,
+            acumulo_agua: null, acumulo_agua_onde: '', historico_deslizamento: null,
+            historico_deslizamento_descricao: '', risco_deslizamento_atual: null,
+            risco_deslizamento_observacoes: '', relevo_descricao: '', solo_exposto: null,
+            erosao_expressiva: null, rio_passa_propriedade: null, rio_nome: '',
+            rio_largura: '', mata_ciliar: '', erosao_beira_rio: null, rio_assoreado: null,
+        },
+        agricultura: {
+            tamanho_propriedade: '', areas_plantio: '', culturas: '', tipo_cultivo: '',
+            renda_media: null, pessoas_trabalham: null, equipamentos_maquinarios: '',
+            barracao_proprio: null, sistema_irrigacao: null, observacao: '',
         },
         // Preparacao
         cadastrado_alertas: null,

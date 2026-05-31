@@ -84,4 +84,43 @@ class SyncCadastroTest extends TestCase
             ->postJson('/api/v1/sync/cadastros', $this->payloadValido((string) Str::uuid()))
             ->assertForbidden();
     }
+
+    public function test_sincroniza_blocos_1a1_e_habitantes_do_wizard(): void
+    {
+        $uuid = (string) Str::uuid();
+        $payload = $this->payloadValido($uuid);
+        $payload['cadastros'][0]['habitantes'] = [[
+            'client_uuid' => (string) Str::uuid(),
+            'nome_completo' => 'Maria Souza',
+            'tipo_sanguineo' => 'O+',
+        ]];
+        $payload['cadastros'][0]['vulnerabilidade_saude'] = [
+            'doenca_cronica' => true,
+            'doenca_cronica_qual' => 'Hipertensão',
+            'animais_caes' => 2,
+        ];
+        $payload['cadastros'][0]['infraestrutura'] = [
+            'captacao_agua' => 'nascente',
+            'saneamento_tipo' => 'fossa',
+        ];
+        $payload['cadastros'][0]['risco_ambiental'] = [
+            'rio_passa_propriedade' => true,
+            'rio_nome' => 'Rio Nhundiaquara',
+            'mata_ciliar' => 'desmatada',
+        ];
+        $payload['cadastros'][0]['agricultura'] = [
+            'tamanho_propriedade' => '2 ha',
+            'tipo_cultivo' => 'organico',
+        ];
+
+        $this->actingAs($this->operador(), 'sanctum')
+            ->postJson('/api/v1/sync/cadastros', $payload)->assertStatus(207);
+
+        $cadastro = Cadastro::where('client_uuid', $uuid)->firstOrFail();
+        $this->assertSame('Maria Souza', $cadastro->habitantes->first()->nome_completo);
+        $this->assertTrue($cadastro->vulnerabilidadeSaude->doenca_cronica);
+        $this->assertSame('nascente', $cadastro->infraestrutura->captacao_agua);
+        $this->assertSame('Rio Nhundiaquara', $cadastro->riscoAmbiental->rio_nome);
+        $this->assertSame('organico', $cadastro->agricultura->tipo_cultivo);
+    }
 }

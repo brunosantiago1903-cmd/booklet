@@ -82,8 +82,15 @@
                         <span x-show="form.precisao_gps_m">(±<span x-text="form.precisao_gps_m"></span>m)</span>
                     </span>
                 </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <input x-model="form.telefone_fixo" placeholder="Telefone fixo" class="rounded border-slate-300 text-sm">
+                    <input x-model="form.telefone_celular" placeholder="Telefone celular" class="rounded border-slate-300 text-sm">
+                </div>
                 <label class="flex items-center gap-2 text-sm">
                     <input type="checkbox" x-model="form.precisa_abrigo"> Precisará de abrigo público em saída emergencial?
+                </label>
+                <label class="flex items-center gap-2 text-sm">
+                    <input type="checkbox" x-model="form.moradores_encontrados"> Moradores encontrados no momento do cadastro?
                 </label>
             </section>
 
@@ -108,13 +115,16 @@
                 <input x-model="form.vulnerabilidade_saude.necessidades_especiais" placeholder="Necessidades especiais" class="w-full rounded border-slate-300 text-sm">
                 <label class="flex items-center gap-2 text-sm"><input type="checkbox" x-model="form.vulnerabilidade_saude.necessita_medicacao"> Necessita de medicação?</label>
                 <input x-model="form.vulnerabilidade_saude.medicacao_qual" placeholder="Qual medicação?" class="w-full rounded border-slate-300 text-sm">
+                <input x-model="form.vulnerabilidade_saude.restricao_medicamento" placeholder="Restrição a algum medicamento?" class="w-full rounded border-slate-300 text-sm">
                 <label class="flex items-center gap-2 text-sm"><input type="checkbox" x-model="form.vulnerabilidade_saude.doenca_cronica"> Doença crônica?</label>
+                <input x-model="form.vulnerabilidade_saude.doenca_cronica_qual" placeholder="Qual doença crônica?" class="w-full rounded border-slate-300 text-sm">
                 <input x-model="form.vulnerabilidade_saude.alergias" placeholder="Alergias" class="w-full rounded border-slate-300 text-sm">
                 <div class="grid grid-cols-3 gap-2">
                     <input x-model.number="form.vulnerabilidade_saude.animais_caes" type="number" min="0" placeholder="Cães" class="rounded border-slate-300 text-sm">
                     <input x-model.number="form.vulnerabilidade_saude.animais_gatos" type="number" min="0" placeholder="Gatos" class="rounded border-slate-300 text-sm">
                     <input x-model.number="form.vulnerabilidade_saude.animais_aves" type="number" min="0" placeholder="Aves" class="rounded border-slate-300 text-sm">
                 </div>
+                <input x-model="form.vulnerabilidade_saude.animais_outros" placeholder="Outros animais" class="w-full rounded border-slate-300 text-sm">
             </section>
 
             {{-- Passo 4: Infraestrutura --}}
@@ -126,12 +136,20 @@
                     <option value="sanepar">Sanepar</option><option value="associacao">Associação</option>
                     <option value="outro">Outro</option>
                 </select>
+                <div class="grid grid-cols-2 gap-2">
+                    <input x-model="form.infraestrutura.captacao_agua_outro" placeholder="Se outro, qual?" class="rounded border-slate-300 text-sm">
+                    <input x-model.number="form.infraestrutura.poco_profundidade_m" type="number" step="0.1" placeholder="Profundidade do poço (m)" class="rounded border-slate-300 text-sm">
+                </div>
                 <label class="flex items-center gap-2 text-sm"><input type="checkbox" x-model="form.infraestrutura.coleta_lixo"> Tem coleta de lixo?</label>
+                <input x-model="form.infraestrutura.lixo_organico_destino" placeholder="Destino do lixo orgânico" class="w-full rounded border-slate-300 text-sm">
+                <input x-model="form.infraestrutura.lixo_reciclavel_destino" placeholder="Destino do lixo reciclável" class="w-full rounded border-slate-300 text-sm">
+                <label class="flex items-center gap-2 text-sm"><input type="checkbox" x-model="form.infraestrutura.coleta_seletiva_proxima"> Existe coleta seletiva passando próximo?</label>
                 <select x-model="form.infraestrutura.saneamento_tipo" class="w-full rounded border-slate-300 text-sm">
                     <option value="">Saneamento…</option>
                     <option value="nenhum">Nenhum</option><option value="fossa">Fossa</option>
                     <option value="esgoto_sanepar">Esgoto da Sanepar</option><option value="saneamento_ecologico">Saneamento ecológico</option>
                 </select>
+                <input x-model="form.infraestrutura.saneamento_qual" placeholder="Qual tipo de saneamento?" class="w-full rounded border-slate-300 text-sm">
             </section>
 
             {{-- Passo 5: Riscos ambientais + avaliação --}}
@@ -140,7 +158,23 @@
                 <label class="flex items-center gap-2 text-sm"><input type="checkbox" x-model="form.risco_ambiental.potencialmente_inundavel"> Local potencialmente atingido por inundações?</label>
                 <label class="flex items-center gap-2 text-sm"><input type="checkbox" x-model="form.risco_ambiental.historico_deslizamento"> Histórico de deslizamentos?</label>
                 <label class="flex items-center gap-2 text-sm"><input type="checkbox" x-model="form.risco_ambiental.risco_deslizamento_atual"> Risco de deslizamento atual?</label>
+                <label class="flex items-center gap-2 text-sm"><input type="checkbox" x-model="form.risco_ambiental.solo_exposto"> Áreas com solo exposto (sem vegetação)?</label>
+                <label class="flex items-center gap-2 text-sm"><input type="checkbox" x-model="form.risco_ambiental.erosao_expressiva"> Erosão expressiva em alguma área?</label>
+                <textarea x-model="form.risco_ambiental.relevo_descricao" rows="2" placeholder="Como é o relevo do local?" class="w-full rounded border-slate-300 text-sm"></textarea>
                 <label class="flex items-center gap-2 text-sm"><input type="checkbox" x-model="form.risco_ambiental.rio_passa_propriedade"> Algum rio passa pela propriedade?</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <input x-model="form.risco_ambiental.rio_nome" placeholder="Nome do rio" class="rounded border-slate-300 text-sm">
+                    <input x-model="form.risco_ambiental.rio_largura" placeholder="Largura (margem a margem)" class="rounded border-slate-300 text-sm">
+                </div>
+                <select x-model="form.risco_ambiental.mata_ciliar" class="w-full rounded border-slate-300 text-sm">
+                    <option value="">Mata ciliar…</option>
+                    <option value="preservada">Preservada</option>
+                    <option value="desmatada">Desmatada</option>
+                </select>
+                <div class="flex flex-wrap gap-4 text-sm">
+                    <label class="flex items-center gap-2"><input type="checkbox" x-model="form.risco_ambiental.erosao_beira_rio"> Erosão na beira do rio?</label>
+                    <label class="flex items-center gap-2"><input type="checkbox" x-model="form.risco_ambiental.rio_assoreado"> Rio assoreado neste trecho?</label>
+                </div>
                 <div class="border-t pt-3">
                     <p class="text-sm font-medium mb-1">Avaliação de risco (entra no histórico)</p>
                     <div class="grid grid-cols-2 gap-2">
@@ -160,9 +194,30 @@
 
             {{-- Passo 6: Agricultura --}}
             <section x-show="passo === 6" class="space-y-3">
-                <h2 class="font-semibold">6. Agricultura (se houver produção)</h2>
-                <input x-model.number="form.qtd_pessoas_domicilio" type="number" min="0" placeholder="Pessoas no domicílio" class="w-full rounded border-slate-300 text-sm">
-                <input x-model.number="form.renda_domiciliar" type="number" step="0.01" placeholder="Renda domiciliar (R$)" class="w-full rounded border-slate-300 text-sm">
+                <h2 class="font-semibold">6. Domicílio e agricultura</h2>
+                <div class="grid grid-cols-2 gap-2">
+                    <input x-model.number="form.qtd_pessoas_domicilio" type="number" min="0" placeholder="Pessoas no domicílio" class="rounded border-slate-300 text-sm">
+                    <input x-model.number="form.renda_domiciliar" type="number" step="0.01" placeholder="Renda domiciliar (R$)" class="rounded border-slate-300 text-sm">
+                </div>
+                <p class="text-sm text-slate-500 border-t pt-3">Se houver produção agrícola:</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <input x-model="form.agricultura.tamanho_propriedade" placeholder="Tamanho da propriedade" class="rounded border-slate-300 text-sm">
+                    <input x-model="form.agricultura.areas_plantio" placeholder="Áreas de plantio" class="rounded border-slate-300 text-sm">
+                </div>
+                <input x-model="form.agricultura.culturas" placeholder="Culturas" class="w-full rounded border-slate-300 text-sm">
+                <div class="grid grid-cols-2 gap-2">
+                    <select x-model="form.agricultura.tipo_cultivo" class="rounded border-slate-300 text-sm">
+                        <option value="">Tipo de cultivo…</option>
+                        <option value="organico">Orgânico</option>
+                        <option value="convencional">Convencional</option>
+                    </select>
+                    <input x-model.number="form.agricultura.renda_media" type="number" step="0.01" placeholder="Renda média (R$)" class="rounded border-slate-300 text-sm">
+                </div>
+                <input x-model.number="form.agricultura.pessoas_trabalham" type="number" min="0" placeholder="Pessoas que trabalham na propriedade" class="w-full rounded border-slate-300 text-sm">
+                <div class="flex flex-wrap gap-4 text-sm">
+                    <label class="flex items-center gap-2"><input type="checkbox" x-model="form.agricultura.barracao_proprio"> Barracão próprio?</label>
+                    <label class="flex items-center gap-2"><input type="checkbox" x-model="form.agricultura.sistema_irrigacao"> Sistema de irrigação?</label>
+                </div>
             </section>
 
             {{-- Passo 7: Preparação + revisão --}}
