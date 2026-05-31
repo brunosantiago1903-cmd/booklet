@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Sanctum hibrido: o painel autentica a API por sessao (cookie) a partir
+        // dos dominios statefuis; tablets (PWA) usam Bearer token.
+        $middleware->statefulApi();
+
         $middleware->alias([
             'role' => EnsureRole::class,
         ]);
