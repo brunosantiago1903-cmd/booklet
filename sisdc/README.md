@@ -41,6 +41,24 @@ cadastros (domicílio/ocorrência) ── 1:N ── habitantes
 
 ## Como rodar (desenvolvimento)
 
+### Opção A — Docker (um comando, sem instalar PHP/PostgreSQL)
+
+Pré-requisito: Docker + Docker Compose.
+
+```bash
+cd sisdc
+docker compose up --build
+```
+
+Sobe a app + PostgreSQL/PostGIS, roda `migrate --seed` automaticamente e serve em
+**http://localhost:8000/login**. Usuários semeados na tabela abaixo.
+
+> Prévia visual sem backend: abra `public/preview.html` no navegador (ou
+> `http://localhost:8000/preview.html` com a app no ar) para navegar pela
+> interface (mapa, auditoria, Wizard, login) com dados de exemplo.
+
+### Opção B — Local (instalação manual)
+
 Pré-requisitos: PHP 8.3+, Composer, **PostgreSQL com PostGIS**, Node 18+.
 
 ```bash
