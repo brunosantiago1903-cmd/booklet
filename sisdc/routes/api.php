@@ -15,8 +15,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->prefix('v1')->group(function (): void {
 
-    // Sincronizacao offline-first (apenas operador/admin).
-    Route::middleware('role:administrador,operador')->group(function (): void {
+    // Sincronizacao offline-first (apenas operador/admin), com throttle.
+    Route::middleware(['role:administrador,operador', 'throttle:60,1'])->group(function (): void {
         Route::post('/sync/cadastros', [SyncController::class, 'push']);
         Route::get('/sync/cadastros', [SyncController::class, 'pull']);
     });

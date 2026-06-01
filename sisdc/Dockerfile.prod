@@ -1,0 +1,35 @@
+# Imagem de PRODUÇÃO do SISDC: nginx + php-fpm + opcache (via supervisor).
+FROM php:8.3-fpm
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends nginx supervisor \
+    && rm -rf /var/lib/apt/lists/*
+
+ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
+RUN chmod +x /usr/local/bin/install-php-extensions \
+    && install-php-extensions pdo_pgsql pgsql mbstring bcmath gd intl zip opcache
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /app
+
+COPY composer.json composer.lock ./
+RUN composer install --no-interaction --prefer-dist --no-dev --no-scripts --no-autoloader
+
+COPY . /app
+RUN composer dump-autoload --optimize --no-dev \
+    && cp docker/prod/nginx.conf /etc/nginx/sites-available/default \
+    && chmod +x docker/prod/entrypoint.sh \
+    && chown -R www-data:www-data storage bootstrap/cache
+
+# OPcache em modo produção (timestamps fixos).
+RUN { \
+      echo 'opcache.enable=1'; \
+      echo 'opcache.validate_timestamps=0'; \
+      echo 'opcache.memory_consumption=128'; \
+      echo 'opcache.max_accelerated_files=20000'; \
+      echo 'opcache.interned_strings_buffer=16'; \
+    } > /usr/local/etc/php/conf.d/opcache-prod.ini
+
+EXPOSE 80
+ENTRYPOINT ["docker/prod/entrypoint.sh"]

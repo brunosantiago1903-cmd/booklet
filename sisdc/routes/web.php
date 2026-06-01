@@ -15,10 +15,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('mapa'));
 
-// Autenticacao de sessao (uso interno).
+// Autenticacao de sessao (uso interno). Throttle anti força-bruta no POST.
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [LoginController::class, 'show'])->name('login');
-    Route::post('/login', [LoginController::class, 'login'])->name('login.attempt');
+    Route::post('/login', [LoginController::class, 'login'])
+        ->middleware('throttle:10,1')->name('login.attempt');
 });
 Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
 

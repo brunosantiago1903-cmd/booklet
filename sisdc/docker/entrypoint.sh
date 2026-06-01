@@ -18,8 +18,10 @@ until php -r 'exit(@fsockopen(getenv("DB_HOST"), (int) getenv("DB_PORT")) ? 0 : 
     sleep 2
 done
 
-# Schema + dados iniciais (idempotente: usuários e programas via updateOrCreate).
+# Schema + dados de referência (programas sociais).
 php artisan migrate --seed --force
+# Usuários de demonstração (somente fora de produção; o seeder se autoignora em prod).
+php artisan db:seed --class="Database\\Seeders\\DemoUsersSeeder" --force
 
 echo "SISDC pronto em http://localhost:8000 (login: admin@morretes.pr.gov.br / senha-segura)"
 exec php artisan serve --host=0.0.0.0 --port=8000
