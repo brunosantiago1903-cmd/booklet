@@ -76,8 +76,10 @@ sudo -u postgres psql -d sisdc -c "CREATE EXTENSION IF NOT EXISTS postgis;"
 php artisan migrate --seed
 
 # 3) Servir
-php artisan serve            # painel em http://localhost:8000
-npm install && npm run dev   # (opcional) assets do PWA via Vite
+# Assets (obrigatório — o painel usa Vite/Tailwind, sem CDNs):
+npm install && npm run build   # ou `npm run dev` para hot reload
+
+php artisan serve              # painel em http://localhost:8000
 ```
 
 > A migration `enable_postgis_extension` executa `CREATE EXTENSION IF NOT EXISTS postgis`.

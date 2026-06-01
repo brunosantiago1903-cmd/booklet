@@ -2,6 +2,8 @@
 /node_modules
 /.git
 /.env
+/public/build
+/public/hot
 storage/logs/*.log
 storage/framework/cache/data/*
 storage/framework/sessions/*

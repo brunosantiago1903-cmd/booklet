@@ -1,4 +1,15 @@
 # Imagem da aplicação SISDC (Laravel 11 + PHP 8.3).
+
+# Estágio 1: build dos assets (Vite/Tailwind) — gera public/build.
+FROM node:20-alpine AS assets
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci || npm install
+COPY resources resources
+COPY vite.config.js tailwind.config.js postcss.config.js ./
+RUN npm run build
+
+# Estágio 2: aplicação PHP.
 FROM php:8.3-cli
 
 # Extensões PHP necessárias (PostgreSQL/PostGIS, etc.) via instalador do mlocati.
@@ -17,6 +28,7 @@ RUN composer install --no-interaction --prefer-dist --no-dev --no-scripts --no-a
 
 # Copia o restante da aplicação e finaliza o autoloader.
 COPY . /app
+COPY --from=assets /app/public/build /app/public/build
 RUN composer dump-autoload --optimize \
     && chmod +x docker/entrypoint.sh
 

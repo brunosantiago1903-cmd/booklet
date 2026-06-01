@@ -1,12 +1,12 @@
 // Controlador Alpine do Wizard de coleta offline-first.
 //
-// Trabalha 100% offline: cada passo persiste no IndexedDB (salvarCadastroLocal)
-// e o botao "Sincronizar" envia a fila quando ha conexao. Importa idb/uuid via
-// importmap (ver a view coleta/wizard.blade.php).
+// Empacotado pelo Vite (idb/uuid resolvidos do node_modules) — sem CDNs, para
+// funcionar de fato offline. Trabalha 100% offline: cada passo persiste no
+// IndexedDB e o botão "Sincronizar" envia a fila quando há conexão.
 
 import { v4 as uuidv4 } from 'uuid';
-import { salvarCadastroLocal, listarPendentes, setMeta } from './offline/db.js';
-import { sincronizar, registrarBackgroundSync } from './offline/sync.js';
+import { salvarCadastroLocal, listarPendentes, setMeta } from '../offline/db.js';
+import { sincronizar, registrarBackgroundSync } from '../offline/sync.js';
 
 function cadastroVazio() {
     return {
@@ -66,7 +66,7 @@ function cadastroVazio() {
     };
 }
 
-export function wizard(config) {
+export function wizard(config = {}) {
     return {
         passo: 1,
         totalPassos: 7,
@@ -81,8 +81,8 @@ export function wizard(config) {
 
         async init() {
             // Guarda token e device_id para o sync (injetados pela view).
-            await setMeta('api_token', config.token);
-            await setMeta('device_id', config.deviceId);
+            if (config.token) await setMeta('api_token', config.token);
+            if (config.deviceId) await setMeta('device_id', config.deviceId);
             window.addEventListener('online', () => { this.online = true; this.sincronizar(); });
             window.addEventListener('offline', () => { this.online = false; });
             navigator.serviceWorker?.addEventListener?.('message', (e) => {

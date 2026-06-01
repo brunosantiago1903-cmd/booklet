@@ -1,58 +1,83 @@
 // Service Worker do SISDC (PWA Offline-First).
 //
-// Responsabilidades:
-//  - Cache do "app shell" (HTML/CSS/JS) para abrir sem rede.
-//  - Estrategia network-first para GETs de API (cai no cache quando offline).
-//  - Background Sync: reenvia a outbox quando a conexao retorna.
-//
-// Em producao, gere a lista de assets com Workbox/Vite PWA em vez da lista fixa.
+// Estratégias:
+//  - Assets versionados do Vite (/build/*): cache-first (imutáveis, com hash).
+//    Como agora são SAME-ORIGIN (não mais CDNs), o cache funciona de fato offline.
+//  - Navegações (HTML): network-first com fallback ao cache e, por fim, /offline.html.
+//  - Demais GET same-origin: stale-while-revalidate.
+//  - Cross-origin (ex.: tiles do mapa): passa direto (precisam de rede).
+//  - Background Sync: reenvia a fila (outbox) quando a conexão volta.
 
-const CACHE = 'sisdc-shell-v1';
-const APP_SHELL = [
-    '/',
-    '/painel/mapa',
-    '/offline.html',
-];
+const CACHE = 'sisdc-v2';
+const PRECACHE = ['/offline.html', '/manifest.json'];
 
 self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE).then((cache) => cache.addAll(APP_SHELL)),
-    );
+    event.waitUntil(caches.open(CACHE).then((c) => c.addAll(PRECACHE)));
     self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((keys) =>
-            Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))),
-        ),
+            Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))),
     );
     self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
     const { request } = event;
+    if (request.method !== 'GET') return; // POST de sync depende de rede (outbox cuida do offline)
 
-    // Nao interceptamos o POST de sync (precisa de rede; a outbox cuida do offline).
-    if (request.method !== 'GET') return;
+    const url = new URL(request.url);
+    const sameOrigin = url.origin === self.location.origin;
 
-    event.respondWith(
-        fetch(request)
-            .then((resp) => {
+    // Cross-origin (tiles, etc.): não intercepta.
+    if (!sameOrigin) return;
+
+    // Assets imutáveis do Vite: cache-first.
+    if (url.pathname.startsWith('/build/')) {
+        event.respondWith(
+            caches.match(request).then((hit) => hit || fetch(request).then((resp) => {
                 const copia = resp.clone();
-                caches.open(CACHE).then((cache) => cache.put(request, copia));
+                caches.open(CACHE).then((c) => c.put(request, copia));
                 return resp;
-            })
-            .catch(() => caches.match(request).then((c) => c || caches.match('/offline.html'))),
+            })),
+        );
+        return;
+    }
+
+    // Navegações: network-first, fallback ao cache e à página offline.
+    if (request.mode === 'navigate') {
+        event.respondWith(
+            fetch(request)
+                .then((resp) => {
+                    const copia = resp.clone();
+                    caches.open(CACHE).then((c) => c.put(request, copia));
+                    return resp;
+                })
+                .catch(() => caches.match(request).then((hit) => hit || caches.match('/offline.html'))),
+        );
+        return;
+    }
+
+    // Demais GET same-origin: stale-while-revalidate.
+    event.respondWith(
+        caches.match(request).then((hit) => {
+            const rede = fetch(request).then((resp) => {
+                const copia = resp.clone();
+                caches.open(CACHE).then((c) => c.put(request, copia));
+                return resp;
+            }).catch(() => hit);
+            return hit || rede;
+        }),
     );
 });
 
-// Background Sync: o navegador reativa o SW quando ha conexao.
+// Background Sync: o navegador reativa o SW quando há conexão.
 self.addEventListener('sync', (event) => {
     if (event.tag === 'sisdc-sync-cadastros') {
         event.waitUntil(
             self.clients.matchAll().then((clients) => {
-                // Pede a uma aba ativa para rodar o ciclo de sync (acesso ao IndexedDB/token).
                 clients.forEach((client) => client.postMessage({ tipo: 'EXECUTAR_SYNC' }));
             }),
         );

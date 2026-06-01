@@ -1,21 +1,7 @@
 <x-layouts.app title="Coleta de Campo · SISDC">
-    {{-- Mapa de importacao p/ os modulos ESM usados pelo Wizard offline --}}
-    <script type="importmap">
-    {
-        "imports": {
-            "idb": "https://cdn.jsdelivr.net/npm/idb@8/+esm",
-            "uuid": "https://cdn.jsdelivr.net/npm/uuid@9/+esm"
-        }
-    }
-    </script>
-    <script type="module">
-        import { wizard } from '/js/coleta.js';
-        const config = {
-            token: @json($token),
-            deviceId: @json($deviceId),
-        };
-        // Registra no Alpine empacotado pelo Livewire (evita Alpine duplicado).
-        document.addEventListener('alpine:init', () => window.Alpine.data('wizard', () => wizard(config)));
+    {{-- Config do PWA (token/device) consumida pelo bundle (resources/js/app.js). --}}
+    <script>
+        window.SISDC_CONFIG = { token: @json($token), deviceId: @json($deviceId) };
     </script>
 
     <div x-data="wizard" class="max-w-3xl mx-auto">

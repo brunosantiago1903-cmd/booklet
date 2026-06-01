@@ -1,4 +1,15 @@
 # Imagem de PRODUÇÃO do SISDC: nginx + php-fpm + opcache (via supervisor).
+
+# Estágio 1: build dos assets (Vite/Tailwind) — gera public/build.
+FROM node:20-alpine AS assets
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci || npm install
+COPY resources resources
+COPY vite.config.js tailwind.config.js postcss.config.js ./
+RUN npm run build
+
+# Estágio 2: aplicação PHP (nginx + php-fpm).
 FROM php:8.3-fpm
 
 RUN apt-get update \
@@ -17,6 +28,7 @@ COPY composer.json composer.lock ./
 RUN composer install --no-interaction --prefer-dist --no-dev --no-scripts --no-autoloader
 
 COPY . /app
+COPY --from=assets /app/public/build /app/public/build
 RUN composer dump-autoload --optimize --no-dev \
     && cp docker/prod/nginx.conf /etc/nginx/sites-available/default \
     && chmod +x docker/prod/entrypoint.sh \
