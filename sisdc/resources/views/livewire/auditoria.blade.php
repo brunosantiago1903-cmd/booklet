@@ -56,10 +56,12 @@
                             ])>{{ $c->status->label() }}</span>
                         </td>
                         <td class="p-3 text-right whitespace-nowrap">
+                            <a href="{{ route('auditoria.revisar', $c->id) }}" wire:navigate
+                               class="text-slate-700 hover:underline">Ver / Editar</a>
                             @if ($c->status->value !== 'validado')
                                 <button wire:click="validar({{ $c->id }})"
                                         wire:confirm="Validar este cadastro e liberá-lo no mapa?"
-                                        class="text-green-700 hover:underline">Validar</button>
+                                        class="text-green-700 hover:underline ml-3">Validar</button>
                             @endif
                             @if ($c->status->value !== 'rejeitado')
                                 <button wire:click="abrirRejeicao({{ $c->id }})"
