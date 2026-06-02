@@ -63,11 +63,13 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <button type="button" @click="capturarGPS()" class="text-sm px-3 py-1.5 rounded bg-slate-900 text-white">📍 Capturar GPS</button>
-                    <span class="text-sm text-slate-500">
-                        <span x-text="form.latitude ?? '—'"></span>, <span x-text="form.longitude ?? '—'"></span>
-                        <span x-show="form.precisao_gps_m">(±<span x-text="form.precisao_gps_m"></span>m)</span>
-                    </span>
+                    <span class="text-sm text-slate-500" x-show="form.precisao_gps_m">precisão ±<span x-text="form.precisao_gps_m"></span>m</span>
                 </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <input x-model.number="form.latitude" type="number" step="0.0000001" placeholder="Latitude *" class="rounded border-slate-300 text-sm">
+                    <input x-model.number="form.longitude" type="number" step="0.0000001" placeholder="Longitude *" class="rounded border-slate-300 text-sm">
+                </div>
+                <p class="text-xs text-slate-400">Use "Capturar GPS" (requer HTTPS) ou informe lat/long manualmente.</p>
                 <div class="grid grid-cols-2 gap-2">
                     <input x-model="form.telefone_fixo" placeholder="Telefone fixo" class="rounded border-slate-300 text-sm">
                     <input x-model="form.telefone_celular" placeholder="Telefone celular" class="rounded border-slate-300 text-sm">

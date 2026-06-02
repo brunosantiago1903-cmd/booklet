@@ -108,6 +108,12 @@ export function wizard(config = {}) {
         removerHabitante(i) { this.form.habitantes.splice(i, 1); },
 
         capturarGPS() {
+            if (!window.isSecureContext) {
+                alert('O GPS do navegador só funciona em HTTPS (contexto seguro) ou em localhost. '
+                    + 'Neste acesso por IP (http), informe a latitude/longitude manualmente — '
+                    + 'ou publique o sistema via HTTPS (ex.: Cloudflare Tunnel).');
+                return;
+            }
             if (!navigator.geolocation) { alert('GPS indisponível neste dispositivo.'); return; }
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
@@ -115,7 +121,8 @@ export function wizard(config = {}) {
                     this.form.longitude = +pos.coords.longitude.toFixed(7);
                     this.form.precisao_gps_m = Math.round(pos.coords.accuracy);
                 },
-                () => alert('Não foi possível obter a localização.'),
+                (err) => alert('Não foi possível obter a localização (' + err.message + '). '
+                    + 'Você pode informar lat/long manualmente.'),
                 { enableHighAccuracy: true, timeout: 10000 },
             );
         },
