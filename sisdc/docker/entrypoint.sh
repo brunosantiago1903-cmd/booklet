@@ -1,11 +1,40 @@
 #!/usr/bin/env sh
-# Inicialização do container da aplicação SISDC.
+# Inicialização do container da aplicação SISDC (desenvolvimento).
 set -e
 
 cd /app
 
-# Garante um .env (as variáveis do compose têm precedência sobre o arquivo).
-[ -f .env ] || cp .env.example .env
+# Gera o .env a partir das variáveis do contêiner. Isso é necessário porque
+# `php artisan serve` repassa ao processo-filho os valores do ARQUIVO .env;
+# se ele apontasse para 127.0.0.1, as requisições web não achariam o banco.
+cat > .env <<EOF
+APP_NAME=${APP_NAME:-SISDC Morretes}
+APP_ENV=${APP_ENV:-local}
+APP_KEY=${APP_KEY:-}
+APP_DEBUG=${APP_DEBUG:-true}
+APP_URL=${APP_URL:-http://localhost:8000}
+APP_LOCALE=${APP_LOCALE:-pt_BR}
+APP_FALLBACK_LOCALE=en
+APP_FAKER_LOCALE=pt_BR
+
+LOG_CHANNEL=stack
+LOG_LEVEL=debug
+
+DB_CONNECTION=${DB_CONNECTION:-pgsql}
+DB_HOST=${DB_HOST:-db}
+DB_PORT=${DB_PORT:-5432}
+DB_DATABASE=${DB_DATABASE:-sisdc}
+DB_USERNAME=${DB_USERNAME:-sisdc}
+DB_PASSWORD=${DB_PASSWORD:-secret}
+
+SESSION_DRIVER=${SESSION_DRIVER:-database}
+SESSION_LIFETIME=120
+SESSION_DOMAIN=${SESSION_DOMAIN:-localhost}
+SANCTUM_STATEFUL_DOMAINS=${SANCTUM_STATEFUL_DOMAINS:-localhost:8000}
+
+CACHE_STORE=${CACHE_STORE:-database}
+QUEUE_CONNECTION=${QUEUE_CONNECTION:-database}
+EOF
 
 # Gera APP_KEY apenas se ainda não houver uma.
 grep -q '^APP_KEY=base64' .env || php artisan key:generate --force

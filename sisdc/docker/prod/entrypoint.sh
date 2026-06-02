@@ -4,8 +4,33 @@ set -e
 
 cd /app
 
-# .env mínimo (em produção, prefira variáveis de ambiente / secrets do compose).
-[ -f .env ] || cp .env.example .env
+# Gera o .env a partir das variáveis/secrets do contêiner.
+cat > .env <<EOF
+APP_NAME=${APP_NAME:-SISDC Morretes}
+APP_ENV=${APP_ENV:-production}
+APP_KEY=${APP_KEY:-}
+APP_DEBUG=${APP_DEBUG:-false}
+APP_URL=${APP_URL:-https://localhost}
+APP_LOCALE=${APP_LOCALE:-pt_BR}
+
+LOG_CHANNEL=stack
+LOG_LEVEL=warning
+
+DB_CONNECTION=${DB_CONNECTION:-pgsql}
+DB_HOST=${DB_HOST:-db}
+DB_PORT=${DB_PORT:-5432}
+DB_DATABASE=${DB_DATABASE:-sisdc}
+DB_USERNAME=${DB_USERNAME:-sisdc}
+DB_PASSWORD=${DB_PASSWORD:-secret}
+
+SESSION_DRIVER=${SESSION_DRIVER:-database}
+SESSION_SECURE_COOKIE=${SESSION_SECURE_COOKIE:-true}
+SESSION_DOMAIN=${SESSION_DOMAIN:-}
+SANCTUM_STATEFUL_DOMAINS=${SANCTUM_STATEFUL_DOMAINS:-}
+
+CACHE_STORE=${CACHE_STORE:-database}
+QUEUE_CONNECTION=${QUEUE_CONNECTION:-database}
+EOF
 grep -q '^APP_KEY=base64' .env || php artisan key:generate --force
 
 # Aguarda o PostgreSQL.
