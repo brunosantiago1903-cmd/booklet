@@ -20,6 +20,7 @@
             @auth
                 @if (auth()->user()->role->canValidate())
                     <a href="{{ route('auditoria') }}" class="hover:underline">Auditoria</a>
+                    <a href="{{ route('relatorios') }}" class="hover:underline">Relatórios</a>
                 @endif
                 @if (auth()->user()->role->canSync())
                     <a href="{{ route('coleta') }}" class="hover:underline">Coleta de campo</a>

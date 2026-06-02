@@ -6,7 +6,9 @@ use App\Http\Controllers\AnexoController;
 use App\Http\Controllers\Api\MapaController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ColetaController;
+use App\Http\Controllers\ExportController;
 use App\Livewire\Auditoria;
+use App\Livewire\Relatorios;
 use App\Livewire\RevisarCadastro;
 use Illuminate\Support\Facades\Route;
 
@@ -37,10 +39,16 @@ Route::middleware('auth')->group(function (): void {
     // Foto de um anexo (disco privado, somente autenticado).
     Route::get('/anexos/{anexo}', [AnexoController::class, 'show'])->name('anexos.show');
 
-    // Auditoria - valida/rejeita cadastros (administrador, auditor).
+    // Auditoria e relatórios (administrador, auditor).
     Route::middleware('role:administrador,auditor')->group(function (): void {
         Route::get('/painel/auditoria', Auditoria::class)->name('auditoria');
         Route::get('/painel/auditoria/{cadastro}', RevisarCadastro::class)->name('auditoria.revisar');
+        Route::get('/painel/relatorios', Relatorios::class)->name('relatorios');
+
+        // Exportações
+        Route::get('/relatorios/cadastro/{cadastro}/pdf', [ExportController::class, 'cadastroPdf'])->name('export.cadastro.pdf');
+        Route::get('/relatorios/cadastros/pdf', [ExportController::class, 'listaPdf'])->name('export.lista.pdf');
+        Route::get('/relatorios/cadastros/xlsx', [ExportController::class, 'listaExcel'])->name('export.lista.xlsx');
     });
 
     // Coleta de campo (Wizard offline-first) - administrador, operador.
