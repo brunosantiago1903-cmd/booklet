@@ -6,7 +6,7 @@ cd /app
 
 # Gera o .env a partir das variáveis/secrets do contêiner.
 cat > .env <<EOF
-APP_NAME=${APP_NAME:-SISDC Morretes}
+APP_NAME="${APP_NAME:-SISDC Morretes}"
 APP_ENV=${APP_ENV:-production}
 APP_KEY=${APP_KEY:-}
 APP_DEBUG=${APP_DEBUG:-false}

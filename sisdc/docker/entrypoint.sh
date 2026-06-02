@@ -8,7 +8,7 @@ cd /app
 # `php artisan serve` repassa ao processo-filho os valores do ARQUIVO .env;
 # se ele apontasse para 127.0.0.1, as requisições web não achariam o banco.
 cat > .env <<EOF
-APP_NAME=${APP_NAME:-SISDC Morretes}
+APP_NAME="${APP_NAME:-SISDC Morretes}"
 APP_ENV=${APP_ENV:-local}
 APP_KEY=${APP_KEY:-}
 APP_DEBUG=${APP_DEBUG:-true}
