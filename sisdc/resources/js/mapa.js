@@ -38,7 +38,7 @@ export function initMapa() {
         const b = map.getBounds();
         params.set('bbox', [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(','));
 
-        const resp = await fetch(`/api/v1/mapa/cadastros.geojson?${params}`, {
+        const resp = await fetch(`/painel/mapa/cadastros.geojson?${params}`, {
             headers: { Accept: 'application/json' },
             credentials: 'same-origin',
         });

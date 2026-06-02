@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\MapaController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ColetaController;
 use App\Livewire\Auditoria;
@@ -26,6 +27,10 @@ Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->
 Route::middleware('auth')->group(function (): void {
     // Mapa interativo de risco - acessivel a todos os perfis autenticados.
     Route::view('/painel/mapa', 'mapa.index')->name('mapa');
+
+    // GeoJSON do mapa via sessao web (funciona em qualquer host da rede interna,
+    // sem depender de dominio stateful do Sanctum). Tablets usam a rota /api.
+    Route::get('/painel/mapa/cadastros.geojson', [MapaController::class, 'geojson'])->name('mapa.geojson');
 
     // Auditoria - valida/rejeita cadastros (administrador, auditor).
     Route::get('/painel/auditoria', Auditoria::class)
