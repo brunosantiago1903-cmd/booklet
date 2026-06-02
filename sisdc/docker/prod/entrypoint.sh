@@ -25,12 +25,15 @@ DB_PASSWORD=${DB_PASSWORD:-secret}
 
 SESSION_DRIVER=${SESSION_DRIVER:-database}
 SESSION_SECURE_COOKIE=${SESSION_SECURE_COOKIE:-true}
-SESSION_DOMAIN=${SESSION_DOMAIN:-}
-SANCTUM_STATEFUL_DOMAINS=${SANCTUM_STATEFUL_DOMAINS:-}
 
 CACHE_STORE=${CACHE_STORE:-database}
 QUEUE_CONNECTION=${QUEUE_CONNECTION:-database}
 EOF
+
+# SESSION_DOMAIN/SANCTUM apenas se definidos (linha vazia geraria cookie inválido).
+[ -n "${SESSION_DOMAIN:-}" ] && echo "SESSION_DOMAIN=${SESSION_DOMAIN}" >> .env
+[ -n "${SANCTUM_STATEFUL_DOMAINS:-}" ] && echo "SANCTUM_STATEFUL_DOMAINS=${SANCTUM_STATEFUL_DOMAINS}" >> .env
+true
 grep -q '^APP_KEY=base64' .env || php artisan key:generate --force
 
 # Aguarda o PostgreSQL.
