@@ -15,6 +15,7 @@ class Anexo extends Model
     protected $fillable = [
         'client_uuid',
         'categoria',
+        'legenda',
         'disk',
         'path',
         'mime',

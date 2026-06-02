@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\AnexoController;
 use App\Http\Controllers\Api\MapaController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ColetaController;
@@ -31,6 +32,9 @@ Route::middleware('auth')->group(function (): void {
     // GeoJSON do mapa via sessao web (funciona em qualquer host da rede interna,
     // sem depender de dominio stateful do Sanctum). Tablets usam a rota /api.
     Route::get('/painel/mapa/cadastros.geojson', [MapaController::class, 'geojson'])->name('mapa.geojson');
+
+    // Foto de um anexo (disco privado, somente autenticado).
+    Route::get('/anexos/{anexo}', [AnexoController::class, 'show'])->name('anexos.show');
 
     // Auditoria - valida/rejeita cadastros (administrador, auditor).
     Route::get('/painel/auditoria', Auditoria::class)

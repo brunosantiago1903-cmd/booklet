@@ -10,6 +10,8 @@ import { v4 as uuidv4 } from 'uuid';
 import {
     listarPendentes,
     confirmarSincronizado,
+    listarFotosPendentes,
+    confirmarFotoEnviada,
     getMeta,
     setMeta,
 } from './db.js';
@@ -78,12 +80,43 @@ export async function pull() {
     return dados.cadastros?.length ?? 0;
 }
 
+/** Envia as fotos pendentes (multipart), uma a uma. Idempotente por client_uuid. */
+export async function pushAnexos() {
+    const pendentes = await listarFotosPendentes();
+    let enviadas = 0;
+    const token = await getMeta('api_token', '');
+
+    for (const foto of pendentes) {
+        const fd = new FormData();
+        fd.append('client_uuid', foto.client_uuid);
+        fd.append('cadastro_client_uuid', foto.cadastro_uuid);
+        fd.append('categoria', foto.categoria);
+        if (foto.latitude != null) fd.append('latitude', foto.latitude);
+        if (foto.longitude != null) fd.append('longitude', foto.longitude);
+        if (foto.capturado_em) fd.append('capturado_em', foto.capturado_em);
+        fd.append('file', foto.blob, `${foto.client_uuid}.jpg`);
+
+        const resp = await fetch(`${API}/sync/anexos`, {
+            method: 'POST',
+            headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
+            body: fd,
+        });
+        if (resp.ok) {
+            await confirmarFotoEnviada(foto.client_uuid);
+            enviadas++;
+        }
+        // Falha: a foto permanece pendente para nova tentativa.
+    }
+    return enviadas;
+}
+
 /** Ciclo completo, com tolerancia a falhas de rede. */
 export async function sincronizar() {
     try {
         const resumoPush = await push();
         const recebidos = await pull();
-        return { ok: true, push: resumoPush, pull: recebidos };
+        const fotos = await pushAnexos(); // só sobem após os cadastros existirem no servidor
+        return { ok: true, push: resumoPush, pull: recebidos, fotos };
     } catch (e) {
         console.warn('Sincronizacao adiada:', e.message);
         return { ok: false, erro: e.message };

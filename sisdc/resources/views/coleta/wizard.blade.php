@@ -95,6 +95,13 @@
                         <input type="checkbox" x-model="form.moradores_encontrados"> Os moradores foram encontrados no momento do cadastro?
                     </label>
                 </div>
+                <div class="border-t pt-3">
+                    <label class="text-sm font-medium text-slate-600">Fotos da residência</label>
+                    <input type="file" accept="image/*" capture="environment" multiple
+                           @change="adicionarFotos('residencia', $event.target.files); $event.target.value = ''"
+                           class="mt-1 block w-full text-sm">
+                    <p class="text-xs text-slate-400 mt-1">Fotos anexadas neste cadastro: <span x-text="fotosCount"></span> (enviadas após a sincronização).</p>
+                </div>
             </section>
 
             {{-- Passo 2: Habitantes --}}
@@ -215,6 +222,20 @@
                     <input x-model="form.infraestrutura.saneamento_qual" placeholder="Qual tipo / detalhe do saneamento?" class="w-full rounded border-slate-300 text-sm">
                     <input x-model="form.infraestrutura.saneamento_localizacao" placeholder="Onde se localiza o saneamento?" class="w-full rounded border-slate-300 text-sm">
                 </div>
+                <div class="border-t pt-3 grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-xs font-medium text-slate-600">Fotos do poço/nascente</label>
+                        <input type="file" accept="image/*" capture="environment" multiple
+                               @change="adicionarFotos('poco', $event.target.files); $event.target.value = ''"
+                               class="mt-1 block w-full text-xs">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-600">Fotos do saneamento</label>
+                        <input type="file" accept="image/*" capture="environment" multiple
+                               @change="adicionarFotos('saneamento', $event.target.files); $event.target.value = ''"
+                               class="mt-1 block w-full text-xs">
+                    </div>
+                </div>
             </section>
 
             {{-- Passo 5: Riscos ambientais + avaliação --}}
@@ -277,6 +298,12 @@
                             </select>
                         </label>
                     </div>
+                </div>
+                <div class="border-t pt-3">
+                    <label class="text-sm font-medium text-slate-600">Fotos dos riscos (deslizamento, erosão, alagamento…)</label>
+                    <input type="file" accept="image/*" capture="environment" multiple
+                           @change="adicionarFotos('risco', $event.target.files); $event.target.value = ''"
+                           class="mt-1 block w-full text-sm">
                 </div>
             </section>
 

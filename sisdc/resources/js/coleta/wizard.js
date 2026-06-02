@@ -5,7 +5,7 @@
 // IndexedDB e o botão "Sincronizar" envia a fila quando há conexão.
 
 import { v4 as uuidv4 } from 'uuid';
-import { salvarCadastroLocal, listarPendentes, setMeta } from '../offline/db.js';
+import { salvarCadastroLocal, listarPendentes, setMeta, salvarFotoLocal, contarFotos } from '../offline/db.js';
 import { sincronizar, registrarBackgroundSync } from '../offline/sync.js';
 
 function cadastroVazio() {
@@ -82,6 +82,7 @@ export function wizard(config = {}) {
         pendentes: 0,
         statusSync: '',
         form: cadastroVazio(),
+        fotosCount: 0,
 
         // Avaliacao de risco do passo "Riscos" -> vira um historico_riscos.
         avaliacao: { tipo_evento: 'deslizamento', criticidade: 'sem_risco' },
@@ -119,6 +120,21 @@ export function wizard(config = {}) {
         togglePrograma(slug) {
             const i = this.form.programas_sociais.indexOf(slug);
             i === -1 ? this.form.programas_sociais.push(slug) : this.form.programas_sociais.splice(i, 1);
+        },
+
+        // Captura fotos (file input) e as guarda no IndexedDB, vinculadas ao cadastro.
+        async adicionarFotos(categoria, fileList) {
+            for (const file of Array.from(fileList || [])) {
+                await salvarFotoLocal({
+                    client_uuid: uuidv4(),
+                    cadastro_uuid: this.form.client_uuid,
+                    categoria,
+                    blob: file,
+                    latitude: this.form.latitude,
+                    longitude: this.form.longitude,
+                });
+            }
+            this.fotosCount = await contarFotos(this.form.client_uuid);
         },
 
         capturarGPS() {
@@ -174,6 +190,7 @@ export function wizard(config = {}) {
                 : 'Cadastro salvo no dispositivo (será enviado ao reconectar).';
             this.form = cadastroVazio();
             this.passo = 1;
+            this.fotosCount = 0;
         },
 
         async sincronizar() {

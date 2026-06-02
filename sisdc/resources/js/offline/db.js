@@ -77,6 +77,46 @@ export async function confirmarSincronizado(clientUuid, serverData = {}) {
     await tx.done;
 }
 
+// ---- Fotos / anexos -------------------------------------------------------
+
+/** Salva uma foto (Blob) no IndexedDB, vinculada ao cadastro, aguardando upload. */
+export async function salvarFotoLocal({ client_uuid, cadastro_uuid, categoria, blob, latitude, longitude }) {
+    const db = await dbReady;
+    await db.put('anexos', {
+        client_uuid,
+        cadastro_uuid,
+        categoria,
+        blob,
+        latitude: latitude ?? null,
+        longitude: longitude ?? null,
+        capturado_em: new Date().toISOString(),
+        uploaded: false,
+    });
+}
+
+/** Lista as fotos ainda não enviadas. */
+export async function listarFotosPendentes() {
+    const db = await dbReady;
+    return (await db.getAll('anexos')).filter((a) => !a.uploaded);
+}
+
+/** Conta as fotos de um cadastro por categoria. */
+export async function contarFotos(cadastroUuid) {
+    const db = await dbReady;
+    const todas = await db.getAllFromIndex('anexos', 'cadastro_uuid', cadastroUuid);
+    return todas.length;
+}
+
+/** Marca uma foto como enviada. */
+export async function confirmarFotoEnviada(clientUuid) {
+    const db = await dbReady;
+    const a = await db.get('anexos', clientUuid);
+    if (a) {
+        a.uploaded = true;
+        await db.put('anexos', a);
+    }
+}
+
 export async function getMeta(chave, padrao = null) {
     const db = await dbReady;
     return (await db.get('meta', chave))?.valor ?? padrao;

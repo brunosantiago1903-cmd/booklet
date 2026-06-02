@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Enums\Role;
 use App\Models\Cadastro;
+use App\Models\ProgramaSocial;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -87,7 +88,7 @@ class SyncCadastroTest extends TestCase
 
     public function test_sincroniza_programas_sociais_e_escolaridade(): void
     {
-        $programa = \App\Models\ProgramaSocial::create([
+        $programa = ProgramaSocial::create([
             'slug' => 'bolsa-familia', 'nome' => 'Bolsa Família', 'ativo' => true,
         ]);
 
