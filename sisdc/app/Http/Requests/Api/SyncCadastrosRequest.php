@@ -75,6 +75,13 @@ class SyncCadastrosRequest extends FormRequest
             'cadastros.*.habitantes.*.sexo' => ['nullable', 'string', 'max:20'],
             'cadastros.*.habitantes.*.celular' => ['nullable', 'string', 'max:20'],
             'cadastros.*.habitantes.*.tipo_sanguineo' => ['nullable', 'string', 'max:5'],
+            'cadastros.*.habitantes.*.escolaridade_nivel' => ['nullable', 'string', 'max:10'],
+            'cadastros.*.habitantes.*.escolaridade_situacao' => ['nullable', 'string', 'max:12'],
+            'cadastros.*.habitantes.*.trabalha' => ['nullable', 'boolean'],
+            'cadastros.*.habitantes.*.trabalho_tipo' => ['nullable', 'string', 'max:12'],
+            'cadastros.*.habitantes.*.deslocamento_meio' => ['nullable', 'string', 'max:255'],
+            'cadastros.*.habitantes.*.deslocamento_tempo' => ['nullable', 'string', 'max:255'],
+            'cadastros.*.habitantes.*.responsavel_familiar' => ['nullable', 'boolean'],
 
             // Historico de risco (relacao 1:N).
             'cadastros.*.historico_riscos' => ['nullable', 'array'],
@@ -91,6 +98,10 @@ class SyncCadastrosRequest extends FormRequest
             'cadastros.*.infraestrutura' => ['nullable', 'array'],
             'cadastros.*.risco_ambiental' => ['nullable', 'array'],
             'cadastros.*.agricultura' => ['nullable', 'array'],
+
+            // Programas sociais (N:N) - lista de slugs.
+            'cadastros.*.programas_sociais' => ['nullable', 'array'],
+            'cadastros.*.programas_sociais.*' => ['string', 'max:120'],
         ];
     }
 }

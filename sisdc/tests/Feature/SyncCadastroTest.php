@@ -85,6 +85,34 @@ class SyncCadastroTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_sincroniza_programas_sociais_e_escolaridade(): void
+    {
+        $programa = \App\Models\ProgramaSocial::create([
+            'slug' => 'bolsa-familia', 'nome' => 'Bolsa Família', 'ativo' => true,
+        ]);
+
+        $uuid = (string) Str::uuid();
+        $payload = $this->payloadValido($uuid);
+        $payload['cadastros'][0]['programas_sociais'] = ['bolsa-familia'];
+        $payload['cadastros'][0]['habitantes'] = [[
+            'client_uuid' => (string) Str::uuid(),
+            'nome_completo' => 'João',
+            'escolaridade_nivel' => 'M',
+            'escolaridade_situacao' => 'completo',
+            'trabalha' => true,
+            'trabalho_tipo' => 'formal',
+        ]];
+
+        $this->actingAs($this->operador(), 'sanctum')
+            ->postJson('/api/v1/sync/cadastros', $payload)->assertStatus(207);
+
+        $cadastro = Cadastro::where('client_uuid', $uuid)->firstOrFail();
+        $this->assertTrue($cadastro->atendido_programa_social);
+        $this->assertTrue($cadastro->programasSociais->contains($programa));
+        $this->assertSame('M', $cadastro->habitantes->first()->escolaridade_nivel);
+        $this->assertTrue($cadastro->habitantes->first()->trabalha);
+    }
+
     public function test_sincroniza_blocos_1a1_e_habitantes_do_wizard(): void
     {
         $uuid = (string) Str::uuid();

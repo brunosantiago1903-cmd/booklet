@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\ProgramaSocial;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -24,6 +25,8 @@ class ColetaController extends Controller
         return view('coleta.wizard', [
             'token' => $token,
             'deviceId' => 'web-'.$user->id,
+            'programasSociais' => ProgramaSocial::where('ativo', true)
+                ->orderBy('nome')->pluck('nome', 'slug'),
         ]);
     }
 }

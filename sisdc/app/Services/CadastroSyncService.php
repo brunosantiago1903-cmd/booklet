@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Enums\Criticidade;
 use App\Enums\StatusCadastro;
 use App\Models\Cadastro;
+use App\Models\ProgramaSocial;
 use App\Models\SyncLog;
 use App\Models\User;
 use Illuminate\Support\Arr;
@@ -111,6 +111,7 @@ class CadastroSyncService
         $this->sincronizarHabitantes($cadastro, Arr::get($dados, 'habitantes', []));
         $this->sincronizarHistoricoRiscos($cadastro, Arr::get($dados, 'historico_riscos', []), $operador);
         $this->sincronizarBlocos1a1($cadastro, $dados);
+        $this->sincronizarProgramas($cadastro, Arr::get($dados, 'programas_sociais', []));
         $this->recalcularCriticidade($cadastro);
 
         return [
@@ -237,17 +238,24 @@ class CadastroSyncService
     }
 
     /**
+     * Sincroniza os programas sociais (N:N) por slug e atualiza a flag
+     * `atendido_programa_social`.
+     *
+     * @param  array<int,string>  $slugs
+     */
+    private function sincronizarProgramas(Cadastro $cadastro, array $slugs): void
+    {
+        $ids = ProgramaSocial::whereIn('slug', $slugs)->pluck('id')->all();
+        $cadastro->programasSociais()->sync($ids);
+        $cadastro->forceFill(['atendido_programa_social' => $ids !== []])->save();
+    }
+
+    /**
      * Define a criticidade vigente do cadastro com base na avaliacao de risco
      * mais recente (alimenta o filtro de criticidade do mapa).
      */
     private function recalcularCriticidade(Cadastro $cadastro): void
     {
-        $maisRecente = $cadastro->historicoRiscos()->first();
-
-        $criticidade = $maisRecente?->criticidade ?? Criticidade::SEM_RISCO;
-
-        if ($cadastro->criticidade_atual !== $criticidade) {
-            $cadastro->forceFill(['criticidade_atual' => $criticidade->value])->save();
-        }
+        $cadastro->recalcularCriticidadeAtual();
     }
 }

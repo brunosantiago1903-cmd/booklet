@@ -8,6 +8,7 @@ use App\Enums\Criticidade;
 use App\Enums\PadraoConstrutivo;
 use App\Enums\StatusCadastro;
 use App\Enums\TipoResidencia;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -143,5 +144,43 @@ class Cadastro extends Model
     public function validadoPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'validado_por_id');
+    }
+
+    /**
+     * Recalcula e persiste a criticidade vigente a partir da avaliacao de risco
+     * mais recente (alimenta os filtros/cores do mapa). Reutilizado pelo sync e
+     * pela edicao na auditoria.
+     */
+    public function recalcularCriticidadeAtual(): Criticidade
+    {
+        $criticidade = $this->historicoRiscos()->first()?->criticidade ?? Criticidade::SEM_RISCO;
+
+        if ($this->criticidade_atual !== $criticidade) {
+            $this->forceFill(['criticidade_atual' => $criticidade->value])->save();
+        }
+
+        return $criticidade;
+    }
+
+    /**
+     * Filtro reutilizavel (auditoria, relatorios e exportacao).
+     *
+     * @param  Builder<Cadastro>  $query
+     * @param  array<string,mixed>  $f
+     */
+    public function scopeFiltrar($query, array $f): void
+    {
+        $query
+            ->when(! empty($f['status']), fn ($q) => $q->where('status', $f['status']))
+            ->when(! empty($f['criticidade']), fn ($q) => $q->whereIn('criticidade_atual', (array) $f['criticidade']))
+            ->when(! empty($f['bairro']), fn ($q) => $q->whereIn('bairro', (array) $f['bairro']))
+            ->when(! empty($f['area_atencao']), fn ($q) => $q->whereJsonContains('areas_atencao', $f['area_atencao']))
+            ->when(! empty($f['busca']), function ($q) use ($f): void {
+                $q->where(function ($w) use ($f): void {
+                    $w->where('nome_familia', 'ilike', "%{$f['busca']}%")
+                        ->orWhere('codigo_sisdc', 'ilike', "%{$f['busca']}%")
+                        ->orWhere('bairro', 'ilike', "%{$f['busca']}%");
+                });
+            });
     }
 }

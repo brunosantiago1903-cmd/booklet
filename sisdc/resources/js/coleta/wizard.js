@@ -35,23 +35,30 @@ function cadastroVazio() {
         // Filhos
         habitantes: [],
         historico_riscos: [],
+        programas_sociais: [],
         vulnerabilidade_saude: {
             necessidades_especiais: '', necessita_medicacao: null, medicacao_qual: '',
             restricao_medicamento: '', doenca_cronica: null, doenca_cronica_qual: '',
             alergias: '', animais_caes: 0, animais_gatos: 0, animais_aves: 0, animais_outros: '',
         },
         infraestrutura: {
-            captacao_agua: '', captacao_agua_outro: '', poco_profundidade_m: null,
-            coleta_lixo: null, lixo_organico_destino: '', lixo_reciclavel_destino: '',
-            coleta_seletiva_proxima: null, saneamento_tipo: '', saneamento_qual: '',
+            captacao_agua: '', captacao_agua_outro: '', poco_nascente_localizacao: '',
+            poco_profundidade_m: null, coleta_lixo: null, lixo_organico_destino: '',
+            lixo_reciclavel_destino: '', conhece_associacoes_reciclaveis: null,
+            associacao_reciclavel_qual: '', coleta_seletiva_proxima: null,
+            observacoes_residuos: '', saneamento_tipo: '', saneamento_qual: '',
+            saneamento_localizacao: '',
         },
         risco_ambiental: {
             potencialmente_inundavel: null, escoamento_propriedade: '', escoamento_rua: null,
-            acumulo_agua: null, acumulo_agua_onde: '', historico_deslizamento: null,
-            historico_deslizamento_descricao: '', risco_deslizamento_atual: null,
-            risco_deslizamento_observacoes: '', relevo_descricao: '', solo_exposto: null,
-            erosao_expressiva: null, rio_passa_propriedade: null, rio_nome: '',
-            rio_largura: '', mata_ciliar: '', erosao_beira_rio: null, rio_assoreado: null,
+            escoamento_rua_descricao: '', acumulo_agua: null, acumulo_agua_onde: '',
+            historico_deslizamento: null, historico_deslizamento_descricao: '',
+            risco_deslizamento_atual: null, risco_deslizamento_observacoes: '',
+            relevo_descricao: '', solo_exposto: null, solo_exposto_observacoes: '',
+            erosao_expressiva: null, erosao_expressiva_observacoes: '',
+            rio_passa_propriedade: null, rio_nome: '', rio_largura: '', mata_ciliar: '',
+            mata_ciliar_observacoes: '', erosao_beira_rio: null,
+            erosao_beira_rio_observacoes: '', rio_assoreado: null,
         },
         agricultura: {
             tamanho_propriedade: '', areas_plantio: '', culturas: '', tipo_cultivo: '',
@@ -101,11 +108,18 @@ export function wizard(config = {}) {
 
         addHabitante() {
             this.form.habitantes.push({
-                client_uuid: uuidv4(), nome_completo: '', cpf: '',
-                data_nascimento: '', sexo: '', tipo_sanguineo: '',
+                client_uuid: uuidv4(), nome_completo: '', cpf: '', data_nascimento: '',
+                sexo: '', celular: '', tipo_sanguineo: '', escolaridade_nivel: '',
+                escolaridade_situacao: '', trabalha: null, trabalho_tipo: '',
+                deslocamento_meio: '', deslocamento_tempo: '', responsavel_familiar: false,
             });
         },
         removerHabitante(i) { this.form.habitantes.splice(i, 1); },
+
+        togglePrograma(slug) {
+            const i = this.form.programas_sociais.indexOf(slug);
+            i === -1 ? this.form.programas_sociais.push(slug) : this.form.programas_sociais.splice(i, 1);
+        },
 
         capturarGPS() {
             if (!window.isSecureContext) {
