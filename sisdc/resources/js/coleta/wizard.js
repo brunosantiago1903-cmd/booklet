@@ -5,7 +5,7 @@
 // IndexedDB e o botão "Sincronizar" envia a fila quando há conexão.
 
 import { v4 as uuidv4 } from 'uuid';
-import { salvarCadastroLocal, listarPendentes, setMeta, salvarFotoLocal, contarFotos, removerFotoLocal } from '../offline/db.js';
+import { salvarCadastroLocal, listarPendentes, setMeta, salvarFotoLocal, contarFotos, removerFotoLocal, getCadastroLocal, removerCadastroLocal } from '../offline/db.js';
 import { sincronizar, registrarBackgroundSync } from '../offline/sync.js';
 
 function cadastroVazio() {
@@ -81,6 +81,7 @@ export function wizard(config = {}) {
         salvando: false,
         online: navigator.onLine,
         pendentes: 0,
+        pendentesLista: [], // { client_uuid, nome_familia } para reabrir/descartar
         statusSync: '',
         form: cadastroVazio(),
         fotosCount: 0,
@@ -324,7 +325,41 @@ export function wizard(config = {}) {
         },
 
         async atualizarPendentes() {
-            this.pendentes = (await listarPendentes()).length;
+            const lista = await listarPendentes();
+            this.pendentes = lista.length;
+            this.pendentesLista = lista
+                .filter(Boolean)
+                .map((c) => ({
+                    client_uuid: c.client_uuid,
+                    nome_familia: c.nome_familia || '(rascunho sem nome)',
+                    sem_nome: !c.nome_familia,
+                }));
+        },
+
+        // Reabre um rascunho pendente no formulário para correção/edição.
+        async editarPendente(clientUuid) {
+            const c = await getCadastroLocal(clientUuid);
+            if (!c) return;
+            this.limparFotosPreview();
+            this.form = { ...cadastroVazio(), ...c };
+            this.fotosCount = await contarFotos(clientUuid);
+            this.passo = 1;
+            this.statusSync = 'Rascunho reaberto para edição.';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+
+        // Descarta um rascunho pendente (cadastro + fotos) após confirmação.
+        async descartarPendente(clientUuid) {
+            if (!confirm('Descartar este rascunho? Esta ação não pode ser desfeita.')) return;
+            await removerCadastroLocal(clientUuid);
+            if (this.form.client_uuid === clientUuid) {
+                this.limparFotosPreview();
+                this.form = cadastroVazio();
+                this.fotosCount = 0;
+                this.passo = 1;
+            }
+            await this.atualizarPendentes();
+            this.statusSync = 'Rascunho descartado.';
         },
     };
 }

@@ -62,6 +62,23 @@ export async function listarPendentes() {
     return Promise.all(pendentes.map((p) => db.get('cadastros', p.client_uuid)));
 }
 
+/** Carrega um cadastro local pelo client_uuid (para reabrir e editar). */
+export async function getCadastroLocal(clientUuid) {
+    const db = await dbReady;
+    return db.get('cadastros', clientUuid);
+}
+
+/** Remove um cadastro local por completo (cadastro + outbox + fotos). */
+export async function removerCadastroLocal(clientUuid) {
+    const db = await dbReady;
+    const fotos = await db.getAllFromIndex('anexos', 'cadastro_uuid', clientUuid);
+    const tx = db.transaction(['cadastros', 'outbox', 'anexos'], 'readwrite');
+    await tx.objectStore('cadastros').delete(clientUuid);
+    await tx.objectStore('outbox').delete(clientUuid);
+    for (const f of fotos) await tx.objectStore('anexos').delete(f.client_uuid);
+    await tx.done;
+}
+
 /** Marca um cadastro como sincronizado e o remove da outbox. */
 export async function confirmarSincronizado(clientUuid, serverData = {}) {
     const db = await dbReady;

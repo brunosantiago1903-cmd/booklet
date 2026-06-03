@@ -8,7 +8,10 @@
 //  - Cross-origin (ex.: tiles do mapa): passa direto (precisam de rede).
 //  - Background Sync: reenvia a fila (outbox) quando a conexão volta.
 
-const CACHE = 'sisdc-v2';
+// IMPORTANTE: ao publicar correções no app, suba esta versão. A troca do nome
+// dispara o `activate`, que apaga os caches antigos e força o aparelho a baixar
+// o código novo (evita celular preso numa versão velha em cache).
+const CACHE = 'sisdc-v3';
 const PRECACHE = ['/offline.html', '/manifest.json'];
 
 self.addEventListener('install', (event) => {

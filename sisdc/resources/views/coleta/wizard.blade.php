@@ -23,6 +23,23 @@
                     class="ml-auto text-sm px-3 py-1.5 rounded border hover:bg-slate-50">Sincronizar agora</button>
         </div>
 
+        {{-- Lista de rascunhos pendentes: permite reabrir para editar ou descartar
+             (ex.: um rascunho sem nome que o servidor recusa e fica preso na fila). --}}
+        <div x-show="pendentesLista.length" class="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <p class="text-xs font-medium text-amber-800 mb-2">Cadastros pendentes neste aparelho (toque para corrigir e reenviar):</p>
+            <ul class="space-y-1">
+                <template x-for="p in pendentesLista" :key="p.client_uuid">
+                    <li class="flex items-center gap-2 text-sm">
+                        <span class="truncate" :class="p.sem_nome ? 'text-red-600' : 'text-slate-700'" x-text="p.nome_familia"></span>
+                        <button type="button" @click="editarPendente(p.client_uuid)"
+                                class="ml-auto px-2 py-1 rounded border border-amber-300 bg-white text-xs hover:bg-amber-100">Editar</button>
+                        <button type="button" @click="descartarPendente(p.client_uuid)"
+                                class="px-2 py-1 rounded border border-red-200 bg-white text-xs text-red-600 hover:bg-red-50">Descartar</button>
+                    </li>
+                </template>
+            </ul>
+        </div>
+
         {{-- Indicador de passos --}}
         <div class="flex items-center gap-1 mb-6">
             <template x-for="n in totalPassos" :key="n">
