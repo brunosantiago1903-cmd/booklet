@@ -99,6 +99,11 @@ export function wizard(config = {}) {
             navigator.serviceWorker?.addEventListener?.('message', (e) => {
                 if (e.data?.tipo === 'EXECUTAR_SYNC') this.sincronizar();
             });
+            // Agenda o Background Sync UMA vez (retoma a fila se o app for
+            // reaberto com conexão). Não reagendamos a cada ciclo: isso criava
+            // um loop (sync → registra → evento sync → postMessage → sync …)
+            // que inundava o servidor de requisições.
+            registrarBackgroundSync().catch(() => {});
             await this.atualizarPendentes();
         },
 

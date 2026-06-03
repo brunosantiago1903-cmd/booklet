@@ -144,16 +144,33 @@ export async function pushAnexos() {
     return enviadas;
 }
 
-/** Ciclo completo, com tolerancia a falhas de rede. */
+/** Ciclo completo, com tolerancia a falhas de rede.
+ *
+ * Coalescido por um mutex de módulo: se um ciclo já está em andamento, novas
+ * chamadas (evento `online`, postMessage do SW, botão, várias abas) reaproveitam
+ * o mesmo Promise em vez de empilhar requisições. Isso, somado a NÃO reagendar
+ * o Background Sync ao fim de cada ciclo (ver wizard), evita o loop de
+ * sincronização que inundava o servidor com chamadas a /sync/cadastros.
+ */
+let cicloEmAndamento = null;
+
 export async function sincronizar() {
+    if (cicloEmAndamento) return cicloEmAndamento;
+    cicloEmAndamento = (async () => {
+        try {
+            const resumoPush = await push();
+            const recebidos = await pull();
+            const fotos = await pushAnexos(); // só sobem após os cadastros existirem no servidor
+            return { ok: true, push: resumoPush, pull: recebidos, fotos };
+        } catch (e) {
+            console.warn('Sincronizacao adiada:', e.message);
+            return { ok: false, erro: e.message };
+        }
+    })();
     try {
-        const resumoPush = await push();
-        const recebidos = await pull();
-        const fotos = await pushAnexos(); // só sobem após os cadastros existirem no servidor
-        return { ok: true, push: resumoPush, pull: recebidos, fotos };
-    } catch (e) {
-        console.warn('Sincronizacao adiada:', e.message);
-        return { ok: false, erro: e.message };
+        return await cicloEmAndamento;
+    } finally {
+        cicloEmAndamento = null;
     }
 }
 
