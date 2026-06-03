@@ -175,6 +175,7 @@ class Cadastro extends Model
             ->when(! empty($f['criticidade']), fn ($q) => $q->whereIn('criticidade_atual', (array) $f['criticidade']))
             ->when(! empty($f['bairro']), fn ($q) => $q->whereIn('bairro', (array) $f['bairro']))
             ->when(! empty($f['area_atencao']), fn ($q) => $q->whereJsonContains('areas_atencao', $f['area_atencao']))
+            ->when(! empty($f['operador']), fn ($q) => $q->where('operador_id', $f['operador']))
             ->when(! empty($f['busca']), function ($q) use ($f): void {
                 $q->where(function ($w) use ($f): void {
                     $w->where('nome_familia', 'ilike', "%{$f['busca']}%")

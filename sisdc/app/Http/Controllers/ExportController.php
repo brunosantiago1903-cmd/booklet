@@ -84,6 +84,7 @@ class ExportController extends Controller
             'area_atencao' => $request->query('area_atencao'),
             'bairro' => array_filter((array) $request->query('bairro', [])),
             'busca' => $request->query('busca'),
+            'operador' => $request->query('operador'),
         ];
     }
 }

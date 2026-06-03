@@ -58,10 +58,12 @@ class MapaController extends Controller
             ->select([
                 'id', 'codigo_sisdc', 'nome_familia', 'bairro', 'criticidade_atual',
                 'qtd_pessoas_domicilio', 'precisa_abrigo', 'telefone_celular', 'areas_atencao',
+                'operador_id',
                 DB::raw('ST_Y(localizacao::geometry) as lat'),
                 DB::raw('ST_X(localizacao::geometry) as lon'),
             ])
             ->with([
+                'operador:id,name',
                 'habitantes:id,cadastro_id,nome_completo,sexo,data_nascimento,tipo_sanguineo,responsavel_familiar',
                 'vulnerabilidadeSaude:id,cadastro_id,possui_necessidades_especiais,necessita_medicacao,doenca_cronica',
             ])
@@ -89,6 +91,7 @@ class MapaController extends Controller
                     'cor' => $criticidade->color(),
                     'qtd_pessoas' => $c->qtd_pessoas_domicilio,
                     'precisa_abrigo' => $c->precisa_abrigo,
+                    'operador' => $c->operador?->name,
                     'areas_atencao' => $c->areas_atencao,
                     'habitantes' => $c->habitantes->map(fn ($h): array => [
                         'nome' => $h->nome_completo,

@@ -25,7 +25,13 @@
                 @foreach ($areas as $a)<option value="{{ $a->value }}">{{ $a->label() }}</option>@endforeach
             </select>
         </label>
-        <label class="col-span-2">Busca
+        <label>Operador (quem coletou)
+            <select wire:model.live="operador" class="mt-0.5 w-full rounded border-slate-300 text-sm">
+                <option value="">Todos</option>
+                @foreach ($operadoresDisponiveis as $id => $nome)<option value="{{ $id }}">{{ $nome }}</option>@endforeach
+            </select>
+        </label>
+        <label>Busca
             <input wire:model.live.debounce.400ms="busca" placeholder="Família, SISDC, bairro…" class="mt-0.5 w-full rounded border-slate-300 text-sm">
         </label>
         <div class="col-span-2">
@@ -90,6 +96,21 @@
                     @endforelse
                 </tbody>
             </table>
+            <h3 class="font-medium mt-3 mb-1 text-sm">Por operador (quem coletou)</h3>
+            <table class="w-full text-sm">
+                <thead><tr class="text-slate-500 text-left"><th class="py-1">Operador</th><th class="text-right">Cadastros</th><th class="text-right">Pessoas</th></tr></thead>
+                <tbody>
+                    @forelse ($resumoOperador as $nome => $r)
+                        <tr class="border-b border-slate-100">
+                            <td class="py-1">{{ $nome }}</td>
+                            <td class="py-1 text-right">{{ $r['cadastros'] }}</td>
+                            <td class="py-1 text-right">{{ $r['pessoas'] }}</td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="3" class="py-2 text-slate-400">—</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -97,7 +118,7 @@
     <div class="bg-white rounded-xl shadow overflow-hidden">
         <table class="w-full text-sm">
             <thead class="bg-slate-50 text-slate-500 text-left">
-                <tr><th class="p-2">Família</th><th class="p-2">Bairro</th><th class="p-2">Criticidade</th><th class="p-2">Status</th><th class="p-2">Pessoas</th><th class="p-2 text-right">PDF</th></tr>
+                <tr><th class="p-2">Família</th><th class="p-2">Bairro</th><th class="p-2">Criticidade</th><th class="p-2">Operador</th><th class="p-2">Status</th><th class="p-2">Pessoas</th><th class="p-2 text-right">PDF</th></tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
                 @forelse ($cadastros as $c)
@@ -105,12 +126,13 @@
                         <td class="p-2 font-medium">{{ $c->nome_familia }}</td>
                         <td class="p-2">{{ $c->bairro }}</td>
                         <td class="p-2"><span class="inline-block w-2.5 h-2.5 rounded-full mr-1" style="background: {{ $c->criticidade_atual->color() }}"></span>{{ $c->criticidade_atual->label() }}</td>
+                        <td class="p-2">{{ $c->operador?->name ?? '—' }}</td>
                         <td class="p-2">{{ $c->status->label() }}</td>
                         <td class="p-2">{{ $c->habitantes_count }}</td>
                         <td class="p-2 text-right"><a href="{{ route('export.cadastro.pdf', $c) }}" target="_blank" class="text-slate-700 hover:underline">PDF</a></td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="p-4 text-center text-slate-400">Nenhum cadastro encontrado.</td></tr>
+                    <tr><td colspan="7" class="p-4 text-center text-slate-400">Nenhum cadastro encontrado.</td></tr>
                 @endforelse
             </tbody>
         </table>

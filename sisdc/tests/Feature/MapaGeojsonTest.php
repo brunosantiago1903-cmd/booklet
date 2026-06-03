@@ -52,6 +52,17 @@ class MapaGeojsonTest extends TestCase
             ->assertJsonPath('features.0.properties.habitantes.0.responsavel', true);
     }
 
+    public function test_geojson_inclui_o_operador(): void
+    {
+        $op = User::factory()->create(['role' => Role::OPERADOR, 'name' => 'Carlos Campo']);
+        Cadastro::factory()->validado()->create(['operador_id' => $op->id]);
+
+        $resp = $this->actingAs(User::factory()->create(['role' => Role::AUDITOR]), 'sanctum')
+            ->getJson('/api/v1/mapa/cadastros.geojson');
+
+        $resp->assertOk()->assertJsonPath('features.0.properties.operador', 'Carlos Campo');
+    }
+
     public function test_filtro_de_criticidade(): void
     {
         $user = User::factory()->create(['role' => Role::ADMINISTRADOR]);

@@ -83,6 +83,7 @@ export function initMapa() {
                     `Criticidade: <b style="color:${p.cor}">${p.criticidade_label}</b> · ` +
                     `Abrigo: ${p.precisa_abrigo ? 'Sim' : 'Não'}<br>` +
                     (p.telefone ? `Tel.: ${p.telefone}<br>` : '') +
+                    (p.operador ? `Coletado por: ${p.operador}<br>` : '') +
                     (alertas ? `<div style="margin:3px 0;color:#b91c1c">${alertas}</div>` : '') +
                     `<b>Moradores (${(p.habitantes || []).length}${p.qtd_pessoas ? ' de ' + p.qtd_pessoas : ''}):</b>` +
                     (habs ? `<ul style="margin:2px 0 0;padding-left:16px">${habs}</ul>` : ' <span style="color:#64748b">não informados</span>') +

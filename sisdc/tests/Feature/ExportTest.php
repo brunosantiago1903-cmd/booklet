@@ -66,6 +66,20 @@ class ExportTest extends TestCase
             ->assertDontSee('FamiliaBeta');
     }
 
+    public function test_relatorios_filtra_por_operador(): void
+    {
+        $op1 = User::factory()->create(['role' => Role::OPERADOR, 'name' => 'Operador Um']);
+        $op2 = User::factory()->create(['role' => Role::OPERADOR, 'name' => 'Operador Dois']);
+        Cadastro::factory()->create(['nome_familia' => 'FamiliaDoUm', 'operador_id' => $op1->id]);
+        Cadastro::factory()->create(['nome_familia' => 'FamiliaDoDois', 'operador_id' => $op2->id]);
+
+        Livewire::actingAs($this->auditor())
+            ->test(Relatorios::class)
+            ->set('operador', (string) $op1->id)
+            ->assertSee('FamiliaDoUm')
+            ->assertDontSee('FamiliaDoDois');
+    }
+
     public function test_operador_nao_acessa_relatorios(): void
     {
         $operador = User::factory()->create(['role' => Role::OPERADOR]);
