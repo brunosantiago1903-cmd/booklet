@@ -1,0 +1,48 @@
+# Sobe o SISDC completo (app Laravel + PostgreSQL/PostGIS) com um comando:
+#
+#   cd sisdc && docker compose up --build
+#
+# Depois acesse http://localhost:8000/login
+#   admin@morretes.pr.gov.br / senha-segura  (idem auditor@ e operador@)
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: sisdc
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: sisdc
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sisdc -d sisdc"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_NAME: "SISDC Morretes"
+      APP_ENV: local
+      APP_DEBUG: "true"
+      # Sem APP_URL/SESSION_DOMAIN fixos: cookie "host-only" funciona tanto em
+      # localhost quanto pelo IP da rede interna (ex.: http://192.168.x.x:8000).
+      APP_LOCALE: pt_BR
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_DATABASE: sisdc
+      DB_USERNAME: sisdc
+      DB_PASSWORD: secret
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+    ports:
+      - "8000:8000"
+
+volumes:
+  dbdata:

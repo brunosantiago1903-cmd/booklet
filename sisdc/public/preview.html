@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SISDC Morretes — Prévia navegável</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  #mapa { height: 70vh; min-height: 420px; }
+  [x-cloak]{display:none}
+  .leaflet-popup-content{font-size:.85rem}
+</style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+<!-- Cabeçalho -->
+<header class="h-14 bg-slate-900 text-white flex items-center px-4 gap-4 sticky top-0 z-[1000]">
+  <span class="font-semibold">SISDC · Defesa Civil de Morretes</span>
+  <nav class="ml-auto flex items-center gap-1 text-sm">
+    <button data-tab="mapa"      class="tabbtn px-3 py-1.5 rounded hover:bg-slate-700">Mapa</button>
+    <button data-tab="auditoria" class="tabbtn px-3 py-1.5 rounded hover:bg-slate-700">Auditoria</button>
+    <button data-tab="coleta"    class="tabbtn px-3 py-1.5 rounded hover:bg-slate-700">Coleta (PWA)</button>
+    <button data-tab="login"     class="tabbtn px-3 py-1.5 rounded hover:bg-slate-700">Login</button>
+  </nav>
+</header>
+
+<div class="bg-amber-100 text-amber-800 text-xs text-center py-1">
+  Prévia estática da interface (dados de exemplo) — o sistema real roda em Laravel + PostGIS com estes mesmos componentes.
+</div>
+
+<main class="max-w-6xl mx-auto p-4">
+
+  <!-- ===================== MAPA ===================== -->
+  <section id="tab-mapa">
+    <div class="flex flex-wrap items-center gap-3 mb-3">
+      <h1 class="text-lg font-semibold">Mapa de Risco</h1>
+      <div id="filtros" class="ml-auto flex flex-wrap items-center gap-3 text-sm"></div>
+    </div>
+    <div id="mapa" class="rounded-xl shadow overflow-hidden"></div>
+    <p class="text-xs text-slate-500 mt-2">Marque/desmarque as criticidades para filtrar as camadas. Clique num ponto para ver os detalhes da família.</p>
+  </section>
+
+  <!-- ===================== AUDITORIA ===================== -->
+  <section id="tab-auditoria" class="hidden">
+    <div class="flex items-center gap-3 mb-3">
+      <h1 class="text-lg font-semibold">Auditoria de cadastros</h1>
+      <div class="ml-auto flex gap-2">
+        <select class="rounded border-slate-300 text-sm"><option>Status: Sincronizado</option><option>Todos</option></select>
+        <input class="rounded border-slate-300 text-sm" placeholder="Buscar família/SISDC/bairro…">
+      </div>
+    </div>
+    <div class="bg-white rounded-xl shadow overflow-hidden">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-50 text-slate-500 text-left">
+          <tr><th class="p-3">#</th><th class="p-3">Família</th><th class="p-3">Bairro</th><th class="p-3">Criticidade</th><th class="p-3">Pessoas</th><th class="p-3">Status</th><th class="p-3 text-right">Ações</th></tr>
+        </thead>
+        <tbody id="aud-rows" class="divide-y divide-slate-100"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===================== COLETA (WIZARD) ===================== -->
+  <section id="tab-coleta" class="hidden max-w-3xl mx-auto">
+    <div class="flex items-center gap-3 mb-4 text-sm">
+      <span class="px-2 py-0.5 rounded text-white bg-green-600">Online</span>
+      <span class="text-slate-500">Pendentes: <b>0</b></span>
+      <button class="ml-auto text-sm px-3 py-1.5 rounded border hover:bg-slate-50">Sincronizar agora</button>
+    </div>
+    <div class="flex items-center gap-1 mb-6" id="wiz-steps"></div>
+    <div class="bg-white rounded-xl shadow p-6 space-y-3">
+      <h2 class="font-semibold">1. Identificação e endereço</h2>
+      <div>
+        <label class="text-sm text-slate-600">Áreas de atenção</label>
+        <div class="flex flex-wrap gap-3 mt-1 text-sm">
+          <label class="flex items-center gap-1"><input type="checkbox" checked> Deslizamento</label>
+          <label class="flex items-center gap-1"><input type="checkbox"> Alagamento</label>
+          <label class="flex items-center gap-1"><input type="checkbox"> Inundação</label>
+          <label class="flex items-center gap-1"><input type="checkbox"> Enxurrada</label>
+          <label class="flex items-center gap-1"><input type="checkbox"> Vendaval/Ciclone</label>
+        </div>
+      </div>
+      <input class="w-full rounded border-slate-300 text-sm" placeholder="Nome da família *" value="Família Souza">
+      <div class="grid grid-cols-3 gap-2">
+        <input class="rounded border-slate-300 text-sm" placeholder="CEP" value="83350-000">
+        <input class="col-span-2 rounded border-slate-300 text-sm" placeholder="Endereço" value="Estrada da Graciosa, km 8">
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <select class="rounded border-slate-300 text-sm"><option>Padrão construtivo: Madeira</option></select>
+        <select class="rounded border-slate-300 text-sm"><option>Tipo: Moradia própria</option></select>
+      </div>
+      <div class="flex items-center gap-2">
+        <button class="text-sm px-3 py-1.5 rounded bg-slate-900 text-white">📍 Capturar GPS</button>
+        <span class="text-sm text-slate-500">-25.4767, -48.8344 (±6m)</span>
+      </div>
+      <label class="flex items-center gap-2 text-sm"><input type="checkbox" checked> Precisará de abrigo público em saída emergencial?</label>
+      <div class="flex items-center gap-2 pt-4 border-t">
+        <button class="px-4 py-2 rounded border text-sm">Salvar rascunho</button>
+        <button class="ml-auto px-4 py-2 rounded bg-slate-900 text-white text-sm">Próximo</button>
+      </div>
+    </div>
+    <p class="text-xs text-slate-500 mt-2">Wizard de 7 passos · funciona offline (IndexedDB) · sincroniza ao reconectar.</p>
+  </section>
+
+  <!-- ===================== LOGIN ===================== -->
+  <section id="tab-login" class="hidden">
+    <div class="max-w-sm mx-auto bg-white rounded-xl shadow p-8 mt-8">
+      <h1 class="text-xl font-semibold mb-1">Defesa Civil de Morretes</h1>
+      <p class="text-sm text-slate-500 mb-6">Sistema de Gestão (SISDC)</p>
+      <div class="space-y-4">
+        <div><label class="block text-sm text-slate-600 mb-1">E-mail</label><input class="w-full rounded border border-slate-300 px-3 py-2 text-sm" value="admin@morretes.pr.gov.br"></div>
+        <div><label class="block text-sm text-slate-600 mb-1">Senha</label><input type="password" class="w-full rounded border border-slate-300 px-3 py-2 text-sm" value="senhasegura"></div>
+        <label class="flex items-center gap-2 text-sm text-slate-600"><input type="checkbox"> Manter conectado</label>
+        <button class="w-full bg-slate-900 text-white rounded py-2 text-sm font-medium">Entrar</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// Paleta de criticidade (idêntica ao enum Criticidade do backend).
+const CRIT = {
+  sem_risco:  { label:'Sem risco',  cor:'#16a34a' },
+  baixo:      { label:'Baixo',      cor:'#84cc16' },
+  medio:      { label:'Médio',      cor:'#eab308' },
+  alto:       { label:'Alto',       cor:'#f97316' },
+  muito_alto: { label:'Muito alto', cor:'#dc2626' },
+};
+
+// Dados de exemplo (família, bairro, coordenadas em Morretes-PR).
+const CADASTROS = [
+  { id:1, nome:'Família Souza',     bairro:'Centro',        crit:'muito_alto', pessoas:4, lat:-25.4767, lon:-48.8344, areas:['deslizamento'] },
+  { id:2, nome:'Família Oliveira',  bairro:'Porto de Cima',  crit:'alto',       pessoas:3, lat:-25.4690, lon:-48.8220, areas:['inundacao'] },
+  { id:3, nome:'Família Lima',      bairro:'América de Baixo',crit:'medio',     pessoas:5, lat:-25.4830, lon:-48.8410, areas:['enxurrada'] },
+  { id:4, nome:'Família Pereira',   bairro:'Centro',         crit:'baixo',      pessoas:2, lat:-25.4745, lon:-48.8290, areas:['alagamento'] },
+  { id:5, nome:'Família Rocha',     bairro:'São Sebastião',  crit:'muito_alto', pessoas:6, lat:-25.4880, lon:-48.8300, areas:['deslizamento','enxurrada'] },
+  { id:6, nome:'Família Costa',     bairro:'Floresta',       crit:'sem_risco',  pessoas:1, lat:-25.4700, lon:-48.8450, areas:[] },
+  { id:7, nome:'Família Martins',   bairro:'Porto de Cima',  crit:'alto',       pessoas:4, lat:-25.4660, lon:-48.8180, areas:['inundacao'] },
+  { id:8, nome:'Família Almeida',   bairro:'Centro',         crit:'medio',      pessoas:3, lat:-25.4790, lon:-48.8360, areas:['alagamento'] },
+];
+
+// ---- Navegação por abas ----
+const tabs = ['mapa','auditoria','coleta','login'];
+let mapaInic = false;
+function show(tab){
+  tabs.forEach(t => document.getElementById('tab-'+t).classList.toggle('hidden', t!==tab));
+  document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('bg-slate-700', b.dataset.tab===tab));
+  if(tab==='mapa' && !mapaInic){ initMapa(); mapaInic=true; }
+}
+document.querySelectorAll('.tabbtn').forEach(b => b.addEventListener('click', () => show(b.dataset.tab)));
+
+// ---- Mapa Leaflet ----
+let map, camadas={};
+function initMapa(){
+  map = L.map('mapa').setView([-25.4767,-48.8344], 14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+
+  // filtros + camadas por criticidade
+  const filtros = document.getElementById('filtros');
+  Object.entries(CRIT).forEach(([k,v]) => {
+    camadas[k] = L.layerGroup().addTo(map);
+    const id='f-'+k;
+    filtros.insertAdjacentHTML('beforeend',
+      `<label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" id="${id}" checked>
+       <span class="inline-block w-3 h-3 rounded-full" style="background:${v.cor}"></span>${v.label}</label>`);
+    document.getElementById(id).addEventListener('change', e =>
+      e.target.checked ? camadas[k].addTo(map) : map.removeLayer(camadas[k]));
+  });
+
+  CADASTROS.forEach(c => {
+    const v = CRIT[c.crit];
+    L.circleMarker([c.lat,c.lon],{radius:9,fillColor:v.cor,color:'#1f2937',weight:1,fillOpacity:.85})
+      .bindPopup(`<strong>${c.nome}</strong><br>Bairro: ${c.bairro}<br>Criticidade: <b style="color:${v.cor}">${v.label}</b><br>Pessoas: ${c.pessoas} · Áreas: ${c.areas.join(', ')||'—'}`)
+      .addTo(camadas[c.crit]);
+  });
+  setTimeout(()=>map.invalidateSize(),200);
+}
+
+// ---- Tabela de auditoria ----
+const badge = s => ({sincronizado:'bg-amber-100 text-amber-700',validado:'bg-green-100 text-green-700'}[s]||'bg-slate-100');
+document.getElementById('aud-rows').innerHTML = CADASTROS.map(c => {
+  const v=CRIT[c.crit]; const status = c.id%3===0?'validado':'sincronizado';
+  return `<tr>
+    <td class="p-3 text-slate-400">${c.id}</td>
+    <td class="p-3 font-medium">${c.nome}</td>
+    <td class="p-3">${c.bairro}</td>
+    <td class="p-3"><span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full" style="background:${v.cor}"></span>${v.label}</span></td>
+    <td class="p-3">${c.pessoas}</td>
+    <td class="p-3"><span class="text-xs font-medium px-2 py-0.5 rounded ${badge(status)}">${status}</span></td>
+    <td class="p-3 text-right whitespace-nowrap"><button class="text-green-700 hover:underline">Validar</button><button class="text-red-700 hover:underline ml-3">Rejeitar</button></td>
+  </tr>`;
+}).join('');
+
+// ---- Indicador de passos do wizard ----
+document.getElementById('wiz-steps').innerHTML =
+  Array.from({length:7},(_,i)=>`<div class="flex-1 h-1.5 rounded ${i===0?'bg-slate-900':'bg-slate-200'}"></div>`).join('');
+
+show('mapa');
+</script>
+</body>
+</html>
