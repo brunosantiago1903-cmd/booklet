@@ -107,6 +107,12 @@ export async function contarFotos(cadastroUuid) {
     return todas.length;
 }
 
+/** Remove uma foto do armazenamento local (antes do envio). */
+export async function removerFotoLocal(clientUuid) {
+    const db = await dbReady;
+    await db.delete('anexos', clientUuid);
+}
+
 /** Marca uma foto como enviada. */
 export async function confirmarFotoEnviada(clientUuid) {
     const db = await dbReady;

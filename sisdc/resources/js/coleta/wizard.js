@@ -5,7 +5,7 @@
 // IndexedDB e o botão "Sincronizar" envia a fila quando há conexão.
 
 import { v4 as uuidv4 } from 'uuid';
-import { salvarCadastroLocal, listarPendentes, setMeta, salvarFotoLocal, contarFotos } from '../offline/db.js';
+import { salvarCadastroLocal, listarPendentes, setMeta, salvarFotoLocal, contarFotos, removerFotoLocal } from '../offline/db.js';
 import { sincronizar, registrarBackgroundSync } from '../offline/sync.js';
 
 function cadastroVazio() {
@@ -84,6 +84,7 @@ export function wizard(config = {}) {
         statusSync: '',
         form: cadastroVazio(),
         fotosCount: 0,
+        fotos: [], // prévia reativa: { client_uuid, categoria, url }
         coordsTexto: '',
 
         // Avaliacao de risco do passo "Riscos" -> vira um historico_riscos.
@@ -124,19 +125,67 @@ export function wizard(config = {}) {
             i === -1 ? this.form.programas_sociais.push(slug) : this.form.programas_sociais.splice(i, 1);
         },
 
-        // Captura fotos (file input) e as guarda no IndexedDB, vinculadas ao cadastro.
+        // Captura fotos (file input), comprime, guarda no IndexedDB e exibe a
+        // prévia imediatamente (miniatura) vinculada ao cadastro.
         async adicionarFotos(categoria, fileList) {
             for (const file of Array.from(fileList || [])) {
+                const blob = await this.comprimirImagem(file);
+                const client_uuid = uuidv4();
                 await salvarFotoLocal({
-                    client_uuid: uuidv4(),
+                    client_uuid,
                     cadastro_uuid: this.form.client_uuid,
                     categoria,
-                    blob: file,
+                    blob,
                     latitude: this.form.latitude,
                     longitude: this.form.longitude,
                 });
+                this.fotos.push({ client_uuid, categoria, url: URL.createObjectURL(blob) });
             }
             this.fotosCount = await contarFotos(this.form.client_uuid);
+        },
+
+        // Remove uma foto (da prévia e do IndexedDB) antes de sincronizar.
+        async removerFoto(clientUuid) {
+            const i = this.fotos.findIndex((f) => f.client_uuid === clientUuid);
+            if (i !== -1) {
+                URL.revokeObjectURL(this.fotos[i].url);
+                this.fotos.splice(i, 1);
+            }
+            await removerFotoLocal(clientUuid);
+            this.fotosCount = await contarFotos(this.form.client_uuid);
+        },
+
+        // Libera as URLs de prévia ao trocar de cadastro.
+        limparFotosPreview() {
+            this.fotos.forEach((f) => URL.revokeObjectURL(f.url));
+            this.fotos = [];
+        },
+
+        // Redimensiona/comprime a imagem (máx. ~1600px, JPEG ~0.7) para caber no
+        // limite de upload e acelerar a sincronização no 4G. Se algo falhar,
+        // mantém o arquivo original.
+        comprimirImagem(file) {
+            return new Promise((resolve) => {
+                if (!file.type?.startsWith('image/')) { resolve(file); return; }
+                const img = new Image();
+                const url = URL.createObjectURL(file);
+                img.onload = () => {
+                    URL.revokeObjectURL(url);
+                    const max = 1600;
+                    const escala = Math.min(1, max / Math.max(img.width, img.height));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.round(img.width * escala);
+                    canvas.height = Math.round(img.height * escala);
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    canvas.toBlob(
+                        (blob) => resolve(blob || file),
+                        'image/jpeg',
+                        0.7,
+                    );
+                };
+                img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+                img.src = url;
+            });
         },
 
         capturarGPS() {
@@ -237,8 +286,9 @@ export function wizard(config = {}) {
             await this.salvarRascunho();
             const r = await this.sincronizar();
             this.statusSync = r.ok
-                ? 'Cadastro salvo e sincronizado.'
-                : 'Cadastro salvo no dispositivo (será enviado ao reconectar).';
+                ? `Cadastro salvo e sincronizado (${this.resumoSync(r)}).`
+                : `Cadastro salvo no dispositivo — ${r.erro || 'será enviado ao reconectar'}.`;
+            this.limparFotosPreview();
             this.form = cadastroVazio();
             this.passo = 1;
             this.fotosCount = 0;
@@ -248,9 +298,24 @@ export function wizard(config = {}) {
             this.statusSync = 'Sincronizando…';
             const r = await sincronizar();
             await this.atualizarPendentes();
-            this.statusSync = r.ok ? 'Sincronização concluída.' : 'Aguardando conexão…';
+            this.statusSync = this.resumoSync(r);
             registrarBackgroundSync().catch(() => {});
             return r;
+        },
+
+        // Monta uma mensagem clara do que aconteceu no ciclo de sincronizacao.
+        resumoSync(r) {
+            if (!r.ok) {
+                return r.erro
+                    ? `Não foi possível sincronizar — ${r.erro}`
+                    : 'Aguardando conexão…';
+            }
+            const p = r.push || {};
+            const enviados = (p.criados || 0) + (p.atualizados || 0);
+            const partes = [`${enviados} enviado(s)`];
+            if (p.erros) partes.push(`${p.erros} com erro (finalize os rascunhos incompletos)`);
+            if (r.fotos) partes.push(`${r.fotos} foto(s)`);
+            return partes.join(' · ');
         },
 
         async atualizarPendentes() {

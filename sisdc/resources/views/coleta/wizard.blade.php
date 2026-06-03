@@ -113,6 +113,7 @@
                            @change="adicionarFotos('residencia', $event.target.files); $event.target.value = ''"
                            class="mt-1 block w-full text-sm">
                     <p class="text-xs text-slate-400 mt-1">Fotos anexadas neste cadastro: <span x-text="fotosCount"></span> (enviadas após a sincronização).</p>
+                    <x-fotos-preview categoria="residencia" />
                 </div>
             </section>
 
@@ -282,11 +283,13 @@
                         <label class="text-xs font-medium text-slate-600">Fotos do poço/nascente</label>
                         <input type="file" accept="image/*" capture="environment" multiple
                                @change="adicionarFotos('poco', $event.target.files); $event.target.value = ''" class="mt-1 block w-full text-xs">
+                        <x-fotos-preview categoria="poco" />
                     </div>
                     <div>
                         <label class="text-xs font-medium text-slate-600">Fotos do saneamento</label>
                         <input type="file" accept="image/*" capture="environment" multiple
                                @change="adicionarFotos('saneamento', $event.target.files); $event.target.value = ''" class="mt-1 block w-full text-xs">
+                        <x-fotos-preview categoria="saneamento" />
                     </div>
                 </div>
             </section>
@@ -353,6 +356,7 @@
                     <label class="text-sm font-medium text-slate-600">Fotos dos riscos</label>
                     <input type="file" accept="image/*" capture="environment" multiple
                            @change="adicionarFotos('risco', $event.target.files); $event.target.value = ''" class="mt-1 block w-full text-sm">
+                    <x-fotos-preview categoria="risco" />
                 </div>
             </section>
 

@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -79,6 +80,12 @@ class CadastroSyncService
      */
     private function processarCadastro(array $dados, User $operador, ?string $deviceId): array
     {
+        // Validacao de negocio por item: um rascunho incompleto vira acao:'erro'
+        // (capturado em processarLote) sem derrubar os cadastros validos do lote.
+        if (trim((string) ($dados['nome_familia'] ?? '')) === '') {
+            throw new RuntimeException('Cadastro sem nome da família — finalize o rascunho antes de sincronizar.');
+        }
+
         $existente = Cadastro::query()
             ->where('client_uuid', $dados['client_uuid'])
             ->first();
@@ -141,8 +148,8 @@ class CadastroSyncService
             'padrao_construtivo' => $dados['padrao_construtivo'] ?? null,
             'telefone_fixo' => $dados['telefone_fixo'] ?? null,
             'telefone_celular' => $dados['telefone_celular'] ?? null,
-            'latitude' => $dados['latitude'],
-            'longitude' => $dados['longitude'],
+            'latitude' => $dados['latitude'] ?? null,
+            'longitude' => $dados['longitude'] ?? null,
             'precisao_gps_m' => $dados['precisao_gps_m'] ?? null,
             'tipo_residencia' => $dados['tipo_residencia'] ?? null,
             'precisa_abrigo' => $dados['precisa_abrigo'] ?? null,
@@ -163,9 +170,18 @@ class CadastroSyncService
 
     /**
      * Preenche a coluna geography a partir de latitude/longitude.
+     *
+     * Sem coordenadas (rascunho de campo sem GPS) a localizacao fica null e o
+     * cadastro simplesmente nao aparece no mapa ate ser completado.
      */
     private function atualizarLocalizacao(Cadastro $cadastro): void
     {
+        if ($cadastro->latitude === null || $cadastro->longitude === null) {
+            DB::statement('UPDATE cadastros SET localizacao = NULL WHERE id = ?', [$cadastro->id]);
+
+            return;
+        }
+
         DB::statement(
             'UPDATE cadastros SET localizacao = ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography WHERE id = ?',
             [$cadastro->longitude, $cadastro->latitude, $cadastro->id],

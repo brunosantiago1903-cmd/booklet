@@ -48,9 +48,20 @@ export async function push() {
         body: JSON.stringify(payload),
     });
 
-    // 207 Multi-Status: tratamos item a item.
+    // 207 Multi-Status: tratamos item a item. Outros status (401/403/422/500)
+    // sao falha real — lemos o corpo para mostrar o motivo ao operador.
     if (!resp.ok && resp.status !== 207) {
-        throw new Error(`Falha no push (${resp.status})`);
+        let detalhe = '';
+        try {
+            const corpo = await resp.json();
+            detalhe = corpo.message
+                || Object.values(corpo.errors ?? {}).flat().join(' ')
+                || '';
+        } catch { /* corpo nao-JSON */ }
+        const motivo = resp.status === 401 || resp.status === 403
+            ? 'sessão/token expirado — recarregue a página e entre novamente'
+            : detalhe;
+        throw new Error(`Falha no envio (${resp.status})${motivo ? ': ' + motivo : ''}`);
     }
 
     const resultado = await resp.json();

@@ -114,6 +114,43 @@ class SyncCadastroTest extends TestCase
         $this->assertTrue($cadastro->habitantes->first()->trabalha);
     }
 
+    public function test_rascunho_incompleto_nao_derruba_o_lote(): void
+    {
+        $valido = (string) Str::uuid();
+        $invalido = (string) Str::uuid();
+
+        $payload = $this->payloadValido($valido);
+        // Segundo item e um rascunho sem nome da familia (incompleto).
+        $payload['cadastros'][] = [
+            'client_uuid' => $invalido,
+            'updated_at_client' => now()->toIso8601String(),
+            'nome_familia' => '',
+        ];
+
+        $resp = $this->actingAs($this->operador(), 'sanctum')
+            ->postJson('/api/v1/sync/cadastros', $payload);
+
+        $resp->assertStatus(207);
+        // O valido sobe; o incompleto vira 'erro' sem travar o lote.
+        $this->assertDatabaseHas('cadastros', ['client_uuid' => $valido, 'status' => 'sincronizado']);
+        $this->assertDatabaseMissing('cadastros', ['client_uuid' => $invalido]);
+        $resp->assertJsonFragment(['acao' => 'erro']);
+    }
+
+    public function test_cadastro_sem_coordenadas_sincroniza_sem_localizacao(): void
+    {
+        $uuid = (string) Str::uuid();
+        $payload = $this->payloadValido($uuid);
+        unset($payload['cadastros'][0]['latitude'], $payload['cadastros'][0]['longitude']);
+
+        $this->actingAs($this->operador(), 'sanctum')
+            ->postJson('/api/v1/sync/cadastros', $payload)->assertStatus(207);
+
+        $cadastro = Cadastro::where('client_uuid', $uuid)->firstOrFail();
+        $this->assertSame('sincronizado', $cadastro->status->value);
+        $this->assertNull($cadastro->localizacao);
+    }
+
     public function test_sincroniza_blocos_1a1_e_habitantes_do_wizard(): void
     {
         $uuid = (string) Str::uuid();

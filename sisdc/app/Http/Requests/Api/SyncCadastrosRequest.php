@@ -44,7 +44,9 @@ class SyncCadastrosRequest extends FormRequest
             'cadastros.*.codigo_interno' => ['nullable', 'string', 'max:60'],
             'cadastros.*.areas_atencao' => ['nullable', 'array'],
             'cadastros.*.areas_atencao.*' => [Rule::enum(AreaAtencao::class)],
-            'cadastros.*.nome_familia' => ['required', 'string', 'max:255'],
+            // nome_familia e validado por item no servico (rascunho incompleto
+            // vira acao:'erro' sem derrubar o lote inteiro).
+            'cadastros.*.nome_familia' => ['nullable', 'string', 'max:255'],
             'cadastros.*.cep' => ['nullable', 'string', 'max:9'],
             'cadastros.*.endereco' => ['nullable', 'string', 'max:255'],
             'cadastros.*.numero' => ['nullable', 'string', 'max:20'],
@@ -54,9 +56,11 @@ class SyncCadastrosRequest extends FormRequest
             'cadastros.*.telefone_fixo' => ['nullable', 'string', 'max:20'],
             'cadastros.*.telefone_celular' => ['nullable', 'string', 'max:20'],
 
-            // Coordenadas: obrigatorias e dentro de faixas validas (sanidade).
-            'cadastros.*.latitude' => ['required', 'numeric', 'between:-90,90'],
-            'cadastros.*.longitude' => ['required', 'numeric', 'between:-180,180'],
+            // Coordenadas: opcionais (rascunho ainda sem GPS sincroniza mesmo
+            // assim; sem coordenada o ponto so nao aparece no mapa). Quando
+            // presentes, precisam estar dentro das faixas validas (sanidade).
+            'cadastros.*.latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'cadastros.*.longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'cadastros.*.precisao_gps_m' => ['nullable', 'numeric', 'min:0'],
 
             'cadastros.*.tipo_residencia' => ['nullable', Rule::enum(TipoResidencia::class)],
