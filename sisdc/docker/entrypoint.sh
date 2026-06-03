@@ -53,4 +53,12 @@ php artisan migrate --seed --force
 php artisan db:seed --class="Database\\Seeders\\DemoUsersSeeder" --force
 
 echo "SISDC pronto em http://localhost:8000 (login: admin@morretes.pr.gov.br / senha-segura)"
+
+# O servidor embutido do PHP (usado pelo `artisan serve`) é single-thread por
+# padrão: atende UMA requisição por vez. No uso real de campo (PWA com Service
+# Worker, várias abas e o ciclo de sync disparando push/pull em paralelo) isso
+# trava — uma conexão keep-alive de uma aba ocupa o processo e o POST de
+# sincronização fica pendurado para sempre ("Sincronizando…" infinito).
+# PHP_CLI_SERVER_WORKERS sobe múltiplos processos e permite concorrência.
+export PHP_CLI_SERVER_WORKERS="${PHP_CLI_SERVER_WORKERS:-8}"
 exec php artisan serve --host=0.0.0.0 --port=8000

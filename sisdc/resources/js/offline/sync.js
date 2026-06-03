@@ -18,6 +18,28 @@ import {
 
 const API = '/api/v1';
 
+// Tempo máximo de espera por resposta do servidor. Sem isto, um servidor
+// ocupado/travado (ex.: dev server single-thread atendendo outra aba) deixaria
+// o fetch pendurado e a tela presa em "Sincronizando…" para sempre. Com o
+// timeout o ciclo sempre termina — com erro claro e nova tentativa depois.
+const TIMEOUT_MS = 20000;
+
+/** fetch com limite de tempo (AbortController) e mensagem de erro amigável. */
+async function fetchComTimeout(url, opts = {}, ms = TIMEOUT_MS) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), ms);
+    try {
+        return await fetch(url, { ...opts, signal: ctrl.signal });
+    } catch (e) {
+        if (e.name === 'AbortError') {
+            throw new Error('o servidor demorou a responder — tente novamente em instantes');
+        }
+        throw new Error('sem conexão com o servidor');
+    } finally {
+        clearTimeout(t);
+    }
+}
+
 function csrf() {
     return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 }
@@ -42,7 +64,7 @@ export async function push() {
         cadastros: pendentes,
     };
 
-    const resp = await fetch(`${API}/sync/cadastros`, {
+    const resp = await fetchComTimeout(`${API}/sync/cadastros`, {
         method: 'POST',
         headers: await authHeaders(),
         body: JSON.stringify(payload),
@@ -80,7 +102,7 @@ export async function pull() {
     const url = new URL(`${API}/sync/cadastros`, location.origin);
     if (desde) url.searchParams.set('desde', desde);
 
-    const resp = await fetch(url, { headers: await authHeaders() });
+    const resp = await fetchComTimeout(url, { headers: await authHeaders() });
     if (!resp.ok) throw new Error(`Falha no pull (${resp.status})`);
 
     const dados = await resp.json();
@@ -107,11 +129,12 @@ export async function pushAnexos() {
         if (foto.capturado_em) fd.append('capturado_em', foto.capturado_em);
         fd.append('file', foto.blob, `${foto.client_uuid}.jpg`);
 
-        const resp = await fetch(`${API}/sync/anexos`, {
+        // Upload de imagem pode ser mais lento no 4G: timeout maior.
+        const resp = await fetchComTimeout(`${API}/sync/anexos`, {
             method: 'POST',
             headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
             body: fd,
-        });
+        }, 60000);
         if (resp.ok) {
             await confirmarFotoEnviada(foto.client_uuid);
             enviadas++;
