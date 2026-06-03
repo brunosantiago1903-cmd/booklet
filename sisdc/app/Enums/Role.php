@@ -41,4 +41,12 @@ enum Role: string
     {
         return in_array($this, [self::ADMINISTRADOR, self::OPERADOR], true);
     }
+
+    /**
+     * Pode gerenciar usuários (somente Administrador).
+     */
+    public function canManageUsers(): bool
+    {
+        return $this === self::ADMINISTRADOR;
+    }
 }

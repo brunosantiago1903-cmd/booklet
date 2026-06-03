@@ -25,6 +25,9 @@
                 @if (auth()->user()->role->canSync())
                     <a href="{{ route('coleta') }}" class="hover:underline">Coleta de campo</a>
                 @endif
+                @if (auth()->user()->role->canManageUsers())
+                    <a href="{{ route('usuarios') }}" class="hover:underline">Usuários</a>
+                @endif
                 <span class="text-slate-400">{{ auth()->user()->name }} ({{ auth()->user()->role->label() }})</span>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf

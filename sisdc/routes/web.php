@@ -10,6 +10,7 @@ use App\Http\Controllers\ExportController;
 use App\Livewire\Auditoria;
 use App\Livewire\Relatorios;
 use App\Livewire\RevisarCadastro;
+use App\Livewire\Usuarios;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -54,4 +55,8 @@ Route::middleware('auth')->group(function (): void {
     // Coleta de campo (Wizard offline-first) - administrador, operador.
     Route::get('/coleta', [ColetaController::class, 'index'])
         ->middleware('role:administrador,operador')->name('coleta');
+
+    // Gestão de usuários (somente administrador).
+    Route::get('/painel/usuarios', Usuarios::class)
+        ->middleware('role:administrador')->name('usuarios');
 });
