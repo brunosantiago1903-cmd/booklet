@@ -11,12 +11,19 @@
 // IMPORTANTE: ao publicar correções no app, suba esta versão. A troca do nome
 // dispara o `activate`, que apaga os caches antigos e força o aparelho a baixar
 // o código novo (evita celular preso numa versão velha em cache).
-const CACHE = 'sisdc-v3';
+const CACHE = 'sisdc-v4';
 const PRECACHE = ['/offline.html', '/manifest.json'];
 
 self.addEventListener('install', (event) => {
+    // Não chamamos skipWaiting() aqui: a nova versão fica em "waiting" e a
+    // página avisa o usuário ("Nova versão — Atualizar"). Só assumimos o
+    // controle quando ele confirmar (mensagem SKIP_WAITING abaixo).
     event.waitUntil(caches.open(CACHE).then((c) => c.addAll(PRECACHE)));
-    self.skipWaiting();
+});
+
+// A página pede para a versão em espera assumir imediatamente (botão Atualizar).
+self.addEventListener('message', (event) => {
+    if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
