@@ -74,9 +74,9 @@ class RevisarCadastro extends Component
             'escolaridade_nivel', 'escolaridade_situacao', 'tipo_sanguineo', 'responsavel_familiar',
         ]))->all();
         $this->saude = $cadastro->vulnerabilidadeSaude?->only([
-            'necessidades_especiais', 'necessita_medicacao', 'medicacao_qual',
-            'restricao_medicamento', 'doenca_cronica', 'doenca_cronica_qual', 'alergias',
-            'animais_caes', 'animais_gatos', 'animais_aves', 'animais_outros',
+            'possui_necessidades_especiais', 'necessidades_especiais', 'necessita_medicacao',
+            'medicacao_qual', 'restricao_medicamento', 'doenca_cronica', 'doenca_cronica_qual',
+            'alergias', 'animais_caes', 'animais_gatos', 'animais_aves', 'animais_outros',
         ]) ?? [];
         $this->infra = $cadastro->infraestrutura?->only([
             'captacao_agua', 'captacao_agua_outro', 'poco_nascente_localizacao',

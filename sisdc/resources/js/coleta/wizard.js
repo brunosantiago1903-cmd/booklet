@@ -37,9 +37,10 @@ function cadastroVazio() {
         historico_riscos: [],
         programas_sociais: [],
         vulnerabilidade_saude: {
-            necessidades_especiais: '', necessita_medicacao: null, medicacao_qual: '',
-            restricao_medicamento: '', doenca_cronica: null, doenca_cronica_qual: '',
-            alergias: '', animais_caes: 0, animais_gatos: 0, animais_aves: 0, animais_outros: '',
+            possui_necessidades_especiais: null, necessidades_especiais: '',
+            necessita_medicacao: null, medicacao_qual: '', restricao_medicamento: '',
+            doenca_cronica: null, doenca_cronica_qual: '', alergias: '',
+            animais_caes: 0, animais_gatos: 0, animais_aves: 0, animais_outros: '',
         },
         infraestrutura: {
             captacao_agua: '', captacao_agua_outro: '', poco_nascente_localizacao: '',
@@ -83,6 +84,7 @@ export function wizard(config = {}) {
         statusSync: '',
         form: cadastroVazio(),
         fotosCount: 0,
+        coordsTexto: '',
 
         // Avaliacao de risco do passo "Riscos" -> vira um historico_riscos.
         avaliacao: { tipo_evento: 'deslizamento', criticidade: 'sem_risco' },
@@ -155,6 +157,55 @@ export function wizard(config = {}) {
                     + 'Você pode informar lat/long manualmente.'),
                 { enableHighAccuracy: true, timeout: 10000 },
             );
+        },
+
+        // Aceita vários formatos: par decimal, DMS e link do Google Maps.
+        parseCoordenadas(texto) {
+            if (!texto) return null;
+            const t = texto.trim();
+
+            // 1) URL do Google Maps: @lat,lng  ou  q=/ll=/destination=lat,lng
+            const url = t.match(/@(-?\d+\.\d+),\s*(-?\d+\.\d+)/)
+                || t.match(/[?&](?:q|ll|destination)=(-?\d+\.\d+),\s*(-?\d+\.\d+)/);
+            if (url) return { lat: parseFloat(url[1]), lon: parseFloat(url[2]) };
+
+            // 2) DMS: 25°28'36.1"S 48°50'03.8"W
+            const dms = [...t.matchAll(/(\d{1,3})\s*[°º]\s*(\d{1,2})\s*['′]\s*([\d.]+)?\s*["″]?\s*([NSEWLOnsewlo])/g)];
+            if (dms.length >= 2) {
+                const toDec = (m) => {
+                    let d = parseInt(m[1], 10) + parseInt(m[2], 10) / 60 + parseFloat(m[3] || '0') / 3600;
+                    const h = m[4].toUpperCase();
+                    if (h === 'S' || h === 'W' || h === 'O') d = -d;
+                    return d;
+                };
+                let lat = null; let lon = null;
+                for (const m of dms) {
+                    const h = m[4].toUpperCase();
+                    if (h === 'N' || h === 'S') lat = toDec(m);
+                    else lon = toDec(m);
+                }
+                if (lat !== null && lon !== null) return { lat, lon };
+            }
+
+            // 3) Par decimal: -25.4767, -48.8344  (vírgula, ponto-e-vírgula ou espaço)
+            const dec = t.match(/(-?\d{1,3}(?:\.\d+)?)\s*[,;]?\s+(-?\d{1,3}(?:\.\d+)?)/)
+                || t.match(/(-?\d{1,3}(?:\.\d+)?)\s*[,;]\s*(-?\d{1,3}(?:\.\d+)?)/);
+            if (dec) return { lat: parseFloat(dec[1]), lon: parseFloat(dec[2]) };
+
+            return null;
+        },
+
+        aplicarCoordenadas() {
+            const r = this.parseCoordenadas(this.coordsTexto);
+            if (!r || Number.isNaN(r.lat) || Number.isNaN(r.lon)
+                || Math.abs(r.lat) > 90 || Math.abs(r.lon) > 180) {
+                alert('Não reconheci as coordenadas. Use "-25.4767, -48.8344", DMS '
+                    + '(25°28\'36"S 48°50\'03"W) ou um link do Google Maps.');
+                return;
+            }
+            this.form.latitude = +r.lat.toFixed(7);
+            this.form.longitude = +r.lon.toFixed(7);
+            this.coordsTexto = '';
         },
 
         // Consolida a avaliacao de risco como item do historico.

@@ -62,7 +62,14 @@
     {{-- Saúde --}}
     <section class="bg-white rounded-xl shadow p-5 space-y-2">
         <h2 class="font-semibold">Saúde e vulnerabilidade</h2>
-        <input wire:model="saude.necessidades_especiais" placeholder="Necessidades especiais" class="w-full rounded border-slate-300 text-sm">
+        <div class="grid grid-cols-2 gap-2 items-center">
+            <label class="text-sm text-slate-600">Portador de necessidades especiais (deficiência)?
+                <select wire:model="saude.possui_necessidades_especiais" class="mt-0.5 w-full rounded border-slate-300 text-sm">
+                    <option value="">—</option><option value="1">Sim</option><option value="0">Não</option>
+                </select>
+            </label>
+            <input wire:model="saude.necessidades_especiais" placeholder="Quais necessidades especiais?" class="rounded border-slate-300 text-sm">
+        </div>
         <div class="grid grid-cols-2 gap-2">
             <label class="flex items-center gap-2 text-sm"><input type="checkbox" wire:model="saude.necessita_medicacao"> Necessita medicação</label>
             <input wire:model="saude.medicacao_qual" placeholder="Qual medicação?" class="rounded border-slate-300 text-sm">

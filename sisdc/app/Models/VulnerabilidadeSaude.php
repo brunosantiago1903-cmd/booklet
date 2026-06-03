@@ -16,6 +16,7 @@ class VulnerabilidadeSaude extends Model
 
     protected $fillable = [
         'cadastro_id',
+        'possui_necessidades_especiais',
         'necessidades_especiais',
         'necessita_medicacao',
         'medicacao_qual',
@@ -32,6 +33,7 @@ class VulnerabilidadeSaude extends Model
     protected function casts(): array
     {
         return [
+            'possui_necessidades_especiais' => 'boolean',
             'necessita_medicacao' => 'boolean',
             'doenca_cronica' => 'boolean',
             'animais_caes' => 'integer',

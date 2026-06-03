@@ -124,6 +124,8 @@ class SyncCadastroTest extends TestCase
             'tipo_sanguineo' => 'O+',
         ]];
         $payload['cadastros'][0]['vulnerabilidade_saude'] = [
+            'possui_necessidades_especiais' => true,
+            'necessidades_especiais' => 'Cadeirante',
             'doenca_cronica' => true,
             'doenca_cronica_qual' => 'Hipertensão',
             'animais_caes' => 2,
@@ -147,6 +149,8 @@ class SyncCadastroTest extends TestCase
 
         $cadastro = Cadastro::where('client_uuid', $uuid)->firstOrFail();
         $this->assertSame('Maria Souza', $cadastro->habitantes->first()->nome_completo);
+        $this->assertTrue($cadastro->vulnerabilidadeSaude->possui_necessidades_especiais);
+        $this->assertSame('Cadeirante', $cadastro->vulnerabilidadeSaude->necessidades_especiais);
         $this->assertTrue($cadastro->vulnerabilidadeSaude->doenca_cronica);
         $this->assertSame('nascente', $cadastro->infraestrutura->captacao_agua);
         $this->assertSame('Rio Nhundiaquara', $cadastro->riscoAmbiental->rio_nome);

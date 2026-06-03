@@ -51,8 +51,9 @@
 
     @if ($cadastro->vulnerabilidadeSaude)
         <h2>Saúde e vulnerabilidade</h2>
+        @php $vs = $cadastro->vulnerabilidadeSaude; @endphp
         <table class="grid">
-            <tr><td><b>Necessidades especiais:</b> {{ $cadastro->vulnerabilidadeSaude->necessidades_especiais ?: '—' }}</td><td><b>Medicação:</b> {{ $cadastro->vulnerabilidadeSaude->medicacao_qual ?: '—' }}</td></tr>
+            <tr><td><b>Necessidades especiais (deficiência):</b> {{ is_null($vs->possui_necessidades_especiais) ? '—' : ($vs->possui_necessidades_especiais ? 'Sim' : 'Não') }} {{ $vs->necessidades_especiais ? '— '.$vs->necessidades_especiais : '' }}</td><td><b>Medicação:</b> {{ $vs->medicacao_qual ?: '—' }}</td></tr>
             <tr><td><b>Doença crônica:</b> {{ $cadastro->vulnerabilidadeSaude->doenca_cronica_qual ?: '—' }}</td><td><b>Alergias:</b> {{ $cadastro->vulnerabilidadeSaude->alergias ?: '—' }}</td></tr>
         </table>
     @endif
