@@ -57,12 +57,37 @@ export function initMapa() {
             }),
             onEachFeature: (feature, layer) => {
                 const p = feature.properties;
+
+                // Lista de moradores
+                const habs = (p.habitantes || []).map((h) => {
+                    const det = [
+                        h.idade != null ? h.idade + ' anos' : null,
+                        h.sexo || null,
+                        h.tipo_sanguineo ? 'sangue ' + h.tipo_sanguineo : null,
+                        h.responsavel ? 'responsável' : null,
+                    ].filter(Boolean).join(' · ');
+                    return `<li>${h.nome || '(sem nome)'}${det ? ' <span style="color:#64748b">(' + det + ')</span>' : ''}</li>`;
+                }).join('');
+
+                // Alertas de vulnerabilidade (importantes para resgate)
+                const v = p.vulnerabilidade || {};
+                const alertas = [
+                    v.necessidades_especiais ? '♿ necessidades especiais' : null,
+                    v.necessita_medicacao ? '💊 medicação contínua' : null,
+                    v.doenca_cronica ? '🩺 doença crônica' : null,
+                ].filter(Boolean).join(' · ');
+
                 layer.bindPopup(
                     `<strong>${p.nome_familia ?? 'Sem nome'}</strong><br>` +
-                    `SISDC: ${p.codigo_sisdc ?? '-'}<br>` +
-                    `Bairro: ${p.bairro ?? '-'}<br>` +
-                    `Criticidade: <b style="color:${p.cor}">${p.criticidade_label}</b><br>` +
-                    `Pessoas: ${p.qtd_pessoas ?? '-'} · Abrigo: ${p.precisa_abrigo ? 'Sim' : 'Não'}`,
+                    `SISDC: ${p.codigo_sisdc ?? '-'} · Bairro: ${p.bairro ?? '-'}<br>` +
+                    `Criticidade: <b style="color:${p.cor}">${p.criticidade_label}</b> · ` +
+                    `Abrigo: ${p.precisa_abrigo ? 'Sim' : 'Não'}<br>` +
+                    (p.telefone ? `Tel.: ${p.telefone}<br>` : '') +
+                    (alertas ? `<div style="margin:3px 0;color:#b91c1c">${alertas}</div>` : '') +
+                    `<b>Moradores (${(p.habitantes || []).length}${p.qtd_pessoas ? ' de ' + p.qtd_pessoas : ''}):</b>` +
+                    (habs ? `<ul style="margin:2px 0 0;padding-left:16px">${habs}</ul>` : ' <span style="color:#64748b">não informados</span>') +
+                    `<div style="margin-top:4px"><a href="/painel/auditoria/${p.id}" target="_blank">ver cadastro completo</a></div>`,
+                    { maxWidth: 320 },
                 );
                 const destino = camadas[p.criticidade];
                 if (destino) destino.addLayer(layer);

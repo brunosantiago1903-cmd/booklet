@@ -57,15 +57,20 @@ class MapaController extends Controller
         $cadastros = $query
             ->select([
                 'id', 'codigo_sisdc', 'nome_familia', 'bairro', 'criticidade_atual',
-                'qtd_pessoas_domicilio', 'precisa_abrigo', 'areas_atencao',
+                'qtd_pessoas_domicilio', 'precisa_abrigo', 'telefone_celular', 'areas_atencao',
                 DB::raw('ST_Y(localizacao::geometry) as lat'),
                 DB::raw('ST_X(localizacao::geometry) as lon'),
+            ])
+            ->with([
+                'habitantes:id,cadastro_id,nome_completo,sexo,data_nascimento,tipo_sanguineo,responsavel_familiar',
+                'vulnerabilidadeSaude:id,cadastro_id,possui_necessidades_especiais,necessita_medicacao,doenca_cronica',
             ])
             ->limit(5000)
             ->get();
 
         $features = $cadastros->map(function (Cadastro $c): array {
             $criticidade = $c->criticidade_atual;
+            $vs = $c->vulnerabilidadeSaude;
 
             return [
                 'type' => 'Feature',
@@ -78,12 +83,25 @@ class MapaController extends Controller
                     'codigo_sisdc' => $c->codigo_sisdc,
                     'nome_familia' => $c->nome_familia,
                     'bairro' => $c->bairro,
+                    'telefone' => $c->telefone_celular,
                     'criticidade' => $criticidade->value,
                     'criticidade_label' => $criticidade->label(),
                     'cor' => $criticidade->color(),
                     'qtd_pessoas' => $c->qtd_pessoas_domicilio,
                     'precisa_abrigo' => $c->precisa_abrigo,
                     'areas_atencao' => $c->areas_atencao,
+                    'habitantes' => $c->habitantes->map(fn ($h): array => [
+                        'nome' => $h->nome_completo,
+                        'sexo' => $h->sexo,
+                        'idade' => $h->data_nascimento?->age,
+                        'tipo_sanguineo' => $h->tipo_sanguineo,
+                        'responsavel' => (bool) $h->responsavel_familiar,
+                    ])->values(),
+                    'vulnerabilidade' => [
+                        'necessidades_especiais' => (bool) ($vs?->possui_necessidades_especiais),
+                        'necessita_medicacao' => (bool) ($vs?->necessita_medicacao),
+                        'doenca_cronica' => (bool) ($vs?->doenca_cronica),
+                    ],
                 ],
             ];
         });
