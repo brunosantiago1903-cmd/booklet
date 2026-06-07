@@ -1,26 +1,44 @@
-import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { sql } from "@/lib/db";
+import { notificarUsuario } from "@/lib/notify";
 import { PRIORIDADES, CATEGORIAS } from "@/lib/constants";
 
 async function abrirChamado(formData: FormData) {
   "use server";
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("chamados")
-    .insert({
-      titulo: formData.get("titulo") as string,
-      descricao: (formData.get("descricao") as string) || null,
-      solicitante_nome: formData.get("nome") as string,
-      solicitante_contato: (formData.get("contato") as string) || null,
-      setor: (formData.get("setor") as string) || null,
-      categoria: (formData.get("categoria") as string) || "Suporte",
-      prioridade: (formData.get("prioridade") as string) || "Médio",
-    })
-    .select("protocolo")
-    .single();
+  const titulo = String(formData.get("titulo") || "");
+  const prioridade = (formData.get("prioridade") as string) || "Médio";
 
-  if (error) redirect("/chamados/novo?erro=1");
-  redirect(`/chamados/novo?ok=${data!.protocolo}`);
+  let protocolo: string;
+  try {
+    const [c] = await sql<{ protocolo: string }[]>`
+      insert into chamados (titulo, descricao, solicitante_nome, solicitante_contato, setor, categoria, prioridade)
+      values (${titulo},
+              ${(formData.get("descricao") as string) || null},
+              ${String(formData.get("nome") || "")},
+              ${(formData.get("contato") as string) || null},
+              ${(formData.get("setor") as string) || null},
+              ${(formData.get("categoria") as string) || "Suporte"}::categoria_ti,
+              ${prioridade}::prioridade)
+      returning protocolo
+    `;
+    protocolo = c.protocolo;
+  } catch {
+    redirect("/chamados/novo?erro=1");
+  }
+
+  // Avisa os gestores sobre o novo chamado
+  const gestores = await sql<{ id: string }[]>`select id from usuarios where papel = 'gestor' and ativo`;
+  await Promise.all(
+    gestores.map((g) =>
+      notificarUsuario(g.id, {
+        titulo: `Novo chamado [${prioridade}]`,
+        corpo: `${titulo} — protocolo ${protocolo}`,
+        link: "/chamados",
+      })
+    )
+  );
+
+  redirect(`/chamados/novo?ok=${protocolo}`);
 }
 
 export default async function NovoChamado({

@@ -1,43 +1,35 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import { notificarProfile } from "@/lib/notify";
+import { sql } from "@/lib/db";
+import { getUserId } from "@/lib/auth";
+import { notificarUsuario } from "@/lib/notify";
 
 export async function criarTarefa(formData: FormData) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return;
+  const userId = await getUserId();
+  if (!userId) return;
 
-  const responsavel_id = (formData.get("responsavel_id") as string) || null;
-  const titulo = formData.get("titulo") as string;
-  const prazo = (formData.get("prazo") as string) || null;
+  const titulo = String(formData.get("titulo") || "");
+  const descricao = (formData.get("descricao") as string) || null;
+  const categoria = (formData.get("categoria") as string) || "Suporte";
   const prioridade = (formData.get("prioridade") as string) || "Médio";
+  const responsavel_id = (formData.get("responsavel_id") as string) || null;
+  const projeto_id = (formData.get("projeto_id") as string) || null;
+  const prazoRaw = (formData.get("prazo") as string) || "";
+  const prazo = prazoRaw ? new Date(prazoRaw).toISOString() : null;
 
-  const { data: tarefa } = await supabase
-    .from("tarefas")
-    .insert({
-      titulo,
-      descricao: (formData.get("descricao") as string) || null,
-      categoria: (formData.get("categoria") as string) || "Suporte",
-      prioridade,
-      status: "A fazer",
-      prazo: prazo ? new Date(prazo).toISOString() : null,
-      projeto_id: (formData.get("projeto_id") as string) || null,
-      responsavel_id,
-      created_by: user.id,
-    })
-    .select()
-    .single();
+  const [tarefa] = await sql<{ id: string }[]>`
+    insert into tarefas (titulo, descricao, categoria, prioridade, status, prazo, projeto_id, responsavel_id, created_by)
+    values (${titulo}, ${descricao}, ${categoria}::categoria_ti, ${prioridade}::prioridade, 'A fazer',
+            ${prazo}, ${projeto_id}, ${responsavel_id}, ${userId})
+    returning id
+  `;
 
-  // Notifica o responsável (push + WhatsApp) se houver e não for o próprio criador
-  if (tarefa && responsavel_id && responsavel_id !== user.id) {
-    await notificarProfile(responsavel_id, {
+  if (tarefa && responsavel_id && responsavel_id !== userId) {
+    await notificarUsuario(responsavel_id, {
       titulo: `Nova tarefa [${prioridade}]`,
       corpo: titulo + (prazo ? ` — prazo ${new Date(prazo).toLocaleDateString("pt-BR")}` : ""),
-      link: `/tarefas`,
+      link: "/tarefas",
     });
   }
 
@@ -46,20 +38,16 @@ export async function criarTarefa(formData: FormData) {
 }
 
 export async function mudarStatus(id: string, status: string) {
-  const supabase = await createClient();
-  await supabase.from("tarefas").update({ status }).eq("id", id);
+  await sql`update tarefas set status = ${status}::status_tarefa where id = ${id}`;
   revalidatePath("/tarefas");
   revalidatePath("/");
 }
 
 export async function atribuir(id: string, responsavel_id: string, titulo: string) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  await supabase.from("tarefas").update({ responsavel_id }).eq("id", id);
-  if (responsavel_id && responsavel_id !== user?.id) {
-    await notificarProfile(responsavel_id, {
+  const userId = await getUserId();
+  await sql`update tarefas set responsavel_id = ${responsavel_id} where id = ${id}`;
+  if (responsavel_id && responsavel_id !== userId) {
+    await notificarUsuario(responsavel_id, {
       titulo: "Tarefa atribuída a você",
       corpo: titulo,
       link: "/tarefas",

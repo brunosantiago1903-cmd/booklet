@@ -1,15 +1,25 @@
-import { createClient } from "@/lib/supabase/server";
+import { sql } from "@/lib/db";
 import { corPrioridade } from "@/lib/constants";
 import ChamadoStatus from "./ChamadoStatus";
 
 export const dynamic = "force-dynamic";
 
+type C = {
+  id: string;
+  protocolo: string;
+  titulo: string;
+  setor: string | null;
+  solicitante_nome: string;
+  solicitante_contato: string | null;
+  prioridade: string;
+  status: string;
+};
+
 export default async function ChamadosPage() {
-  const supabase = await createClient();
-  const { data: chamados } = await supabase
-    .from("chamados")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const chamados = await sql<C[]>`
+    select id, protocolo, titulo, setor, solicitante_nome, solicitante_contato, prioridade, status
+    from chamados order by created_at desc
+  `;
 
   return (
     <div className="space-y-5">
@@ -32,7 +42,7 @@ export default async function ChamadosPage() {
             </tr>
           </thead>
           <tbody className="divide-y">
-            {(chamados ?? []).map((c: any) => (
+            {chamados.map((c) => (
               <tr key={c.id} className="hover:bg-slate-50">
                 <td className="px-4 py-3 font-mono text-xs">{c.protocolo}</td>
                 <td className="px-4 py-3">
@@ -51,7 +61,7 @@ export default async function ChamadosPage() {
                 </td>
               </tr>
             ))}
-            {(!chamados || chamados.length === 0) && (
+            {chamados.length === 0 && (
               <tr>
                 <td colSpan={5} className="px-4 py-10 text-center text-slate-400">
                   Nenhum chamado ainda.

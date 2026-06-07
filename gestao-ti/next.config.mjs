@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // O service worker (public/sw.js) é servido estaticamente; headers garantem escopo correto.
+  // Saída standalone: gera um servidor mínimo para a imagem Docker.
+  output: "standalone",
   async headers() {
     return [
       {

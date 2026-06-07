@@ -1,31 +1,43 @@
-import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { sql } from "@/lib/db";
+import { getUserId } from "@/lib/auth";
 import { corStatus, STATUS_PROJETO } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
 async function criarProjeto(formData: FormData) {
   "use server";
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  await supabase.from("projetos").insert({
-    nome: formData.get("nome") as string,
-    descricao: (formData.get("descricao") as string) || null,
-    status: (formData.get("status") as string) || "Planejado",
-    conclusao_prevista: (formData.get("conclusao") as string) || null,
-    created_by: user?.id,
-  });
+  const userId = await getUserId();
+  if (!userId) return;
+  await sql`
+    insert into projetos (nome, descricao, status, conclusao_prevista, created_by)
+    values (${String(formData.get("nome") || "")},
+            ${(formData.get("descricao") as string) || null},
+            ${(formData.get("status") as string) || "Planejado"}::status_projeto,
+            ${(formData.get("conclusao") as string) || null},
+            ${userId})
+  `;
   revalidatePath("/projetos");
 }
 
+type P = {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  status: string;
+  conclusao_prevista: string | null;
+  total_tarefas: number;
+};
+
 export default async function ProjetosPage() {
-  const supabase = await createClient();
-  const { data: projetos } = await supabase
-    .from("projetos")
-    .select("*, tarefas(count)")
-    .order("created_at", { ascending: false });
+  const projetos = await sql<P[]>`
+    select p.id, p.nome, p.descricao, p.status, p.conclusao_prevista,
+           count(t.id)::int as total_tarefas
+    from projetos p
+    left join tarefas t on t.projeto_id = p.id
+    group by p.id
+    order by p.created_at desc
+  `;
 
   return (
     <div className="space-y-5">
@@ -44,7 +56,7 @@ export default async function ProjetosPage() {
       </form>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {(projetos ?? []).map((p: any) => (
+        {projetos.map((p) => (
           <div key={p.id} className="rounded-xl border bg-white p-4">
             <div className="mb-2 flex items-start justify-between gap-2">
               <h2 className="font-semibold">{p.nome}</h2>
@@ -52,12 +64,12 @@ export default async function ProjetosPage() {
             </div>
             {p.descricao && <p className="mb-2 text-sm text-slate-600">{p.descricao}</p>}
             <div className="flex items-center justify-between text-xs text-slate-500">
-              <span>{p.tarefas?.[0]?.count ?? 0} tarefa(s)</span>
+              <span>{p.total_tarefas} tarefa(s)</span>
               {p.conclusao_prevista && <span>📅 {new Date(p.conclusao_prevista).toLocaleDateString("pt-BR")}</span>}
             </div>
           </div>
         ))}
-        {(!projetos || projetos.length === 0) && <p className="text-slate-400">Nenhum projeto ainda.</p>}
+        {projetos.length === 0 && <p className="text-slate-400">Nenhum projeto ainda.</p>}
       </div>
     </div>
   );

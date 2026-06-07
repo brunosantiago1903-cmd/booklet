@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getUser } from "@/lib/auth";
 import { sair } from "@/app/auth/actions";
 import PushManager from "@/components/PushManager";
 
@@ -13,21 +13,11 @@ const NAV = [
 ];
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("nome, cargo, papel")
-    .eq("id", user.id)
-    .single();
+  const usuario = await getUser();
+  if (!usuario) redirect("/login");
 
   return (
     <div className="min-h-screen md:flex">
-      {/* Sidebar (desktop) / topbar (mobile) */}
       <aside className="border-b bg-white md:w-60 md:border-b-0 md:border-r">
         <div className="flex items-center gap-2 p-4">
           <div className="h-8 w-8 rounded-lg bg-brand" />
@@ -49,8 +39,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           ))}
         </nav>
         <div className="hidden border-t p-3 md:block">
-          <p className="text-sm font-medium">{profile?.nome || user.email}</p>
-          <p className="text-xs text-slate-500">{profile?.cargo || profile?.papel}</p>
+          <p className="text-sm font-medium">{usuario.nome}</p>
+          <p className="text-xs text-slate-500">{usuario.cargo || usuario.papel}</p>
           <form action={sair}>
             <button className="mt-2 text-xs text-red-600 hover:underline">Sair</button>
           </form>
