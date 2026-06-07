@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  @apply bg-slate-50 text-slate-900 antialiased;
+}
+
+/* Cores de status e prioridade reutilizáveis */
+.badge {
+  @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
+}

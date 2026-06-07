@@ -1,0 +1,31 @@
+{
+  "name": "gestao-ti",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sistema de gestão de equipe, tarefas, projetos e chamados de TI — Prefeitura de Morretes",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "push:keys": "node scripts/gen-vapid.mjs"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.45.4",
+    "next": "^15.0.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "web-push": "^3.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@types/web-push": "^3.6.4",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
+    "typescript": "^5.6.3"
+  }
+}
