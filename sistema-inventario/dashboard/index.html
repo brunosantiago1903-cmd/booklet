@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard — Gestão de Ativos de TI</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<section id="view-login" class="tela-login">
+  <form id="form-login" class="cartao-login">
+    <h1>🖥️ Gestão de Ativos de TI</h1>
+    <p class="subtitulo">Painel administrativo — acesso restrito</p>
+    <label>Email <input type="email" id="login-email" required></label>
+    <label>Senha <input type="password" id="login-senha" required></label>
+    <button type="submit">Entrar</button>
+    <p id="login-erro" class="erro"></p>
+  </form>
+</section>
+
+<!-- ===== PAINEL ===== -->
+<div id="view-painel" class="oculto">
+  <header class="topo">
+    <h1>🖥️ Gestão de Ativos de TI</h1>
+    <nav>
+      <button data-aba="aba-visao" class="ativo">Visão Geral</button>
+      <button data-aba="aba-mapa">Mapa</button>
+      <button data-aba="aba-usuarios">Usuários</button>
+    </nav>
+    <div class="topo-acoes">
+      <span id="usuario-logado"></span>
+      <button id="btn-export" type="button" title="Exportar CSV">⬇ CSV</button>
+      <button id="btn-sair" type="button">Sair</button>
+    </div>
+  </header>
+
+  <!-- Visão Geral -->
+  <main id="aba-visao" class="aba">
+    <div class="contadores">
+      <div class="contador c-verde"><span id="cont-verde">0</span>Normal</div>
+      <div class="contador c-amarelo"><span id="cont-amarelo">0</span>Atenção</div>
+      <div class="contador c-vermelho"><span id="cont-vermelho">0</span>Crítico / Offline</div>
+      <div class="contador c-cinza"><span id="cont-cinza">0</span>Baixa</div>
+      <div class="contador c-pendente"><span id="cont-pendente">0</span>Pendentes de vínculo</div>
+    </div>
+    <div class="filtros">
+      <input type="search" id="filtro-busca" placeholder="Filtrar por hostname, MAC, setor, património…">
+      <select id="filtro-semaforo">
+        <option value="">Todos os estados</option>
+        <option value="VERDE">🟢 Normal</option>
+        <option value="AMARELO">🟡 Atenção</option>
+        <option value="VERMELHO">🔴 Crítico/Offline</option>
+        <option value="CINZA">⚪ Baixa</option>
+      </select>
+      <span id="ultima-atualizacao"></span>
+    </div>
+    <div class="tabela-wrap">
+      <table id="tabela-estacoes">
+        <thead>
+          <tr>
+            <th></th><th>Hostname</th><th>MAC</th><th>Património</th><th>Setor</th>
+            <th>Responsável</th><th>CPU %</th><th>RAM %</th><th>Disco %</th>
+            <th>Última telemetria</th><th>Vínculo</th><th>Ações</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Mapa -->
+  <main id="aba-mapa" class="aba oculto">
+    <div id="mapa"></div>
+  </main>
+
+  <!-- Usuários -->
+  <main id="aba-usuarios" class="aba oculto">
+    <div class="grade-usuarios">
+      <form id="form-usuario" class="cartao">
+        <h2>Novo utilizador</h2>
+        <label>Nome <input type="text" id="u-nome" required></label>
+        <label>Email <input type="email" id="u-email" required></label>
+        <label>Senha <input type="password" id="u-senha" minlength="6" required></label>
+        <label>Perfil
+          <select id="u-perfil">
+            <option value="operador">Operador de Campo</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </label>
+        <button type="submit">Criar</button>
+        <p id="usuario-erro" class="erro"></p>
+      </form>
+      <div class="cartao">
+        <h2>Utilizadores do sistema</h2>
+        <table id="tabela-usuarios">
+          <thead><tr><th>Nome</th><th>Email</th><th>Perfil</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal de detalhes / histórico -->
+<div id="modal" class="modal oculto">
+  <div class="modal-conteudo">
+    <button id="modal-fechar" class="modal-x" type="button">✕</button>
+    <h2 id="modal-titulo"></h2>
+    <div id="modal-info"></div>
+    <h3>Histórico de telemetria (24h)</h3>
+    <div class="tabela-wrap">
+      <table id="tabela-historico">
+        <thead><tr><th>Data/Hora (UTC)</th><th>CPU %</th><th>RAM %</th><th>Disco %</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

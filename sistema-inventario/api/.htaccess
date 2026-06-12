@@ -1,0 +1,2 @@
+# Apache: encaminha qualquer rota /api/* para o front controller
+FallbackResource /api/index.php

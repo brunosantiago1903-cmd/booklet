@@ -1,0 +1,3 @@
+# As fotos são servidas apenas pela rota GET /api/uploads/{arquivo} (via PHP).
+# Bloqueia acesso direto do Apache a esta pasta.
+Require all denied

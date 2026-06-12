@@ -1,0 +1,17 @@
+# Opção de deploy com Docker (alternativa ao XAMPP / php -S).
+# Sobe a aplicação completa em http://localhost:8080
+#   docker compose up -d
+#   docker compose exec app php /var/www/html/api/seed_admin.php admin@exemplo.gov.br SuaSenha "Administrador"
+services:
+  app:
+    image: php:8.2-apache
+    container_name: inventario-ti
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+    restart: unless-stopped
+    # Habilita .htaccess (FallbackResource da API) e inicia o Apache
+    command: >
+      bash -c "sed -ri 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
+      && apache2-foreground"

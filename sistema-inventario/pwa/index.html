@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d47a1">
+  <title>Inventário TI — Campo</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topo">
+  <h1>📋 Inventário TI</h1>
+  <button id="btn-sair" class="oculto" type="button">Sair</button>
+</header>
+
+<!-- ===== LOGIN ===== -->
+<section id="view-login" class="view">
+  <form id="form-login" class="cartao">
+    <h2>Acesso do Técnico</h2>
+    <label>Email
+      <input type="email" id="login-email" autocomplete="username" required>
+    </label>
+    <label>Senha
+      <input type="password" id="login-senha" autocomplete="current-password" required>
+    </label>
+    <button type="submit" class="btn-primario">Entrar</button>
+    <p id="login-erro" class="erro"></p>
+  </form>
+</section>
+
+<!-- ===== LISTA DE PENDENTES ===== -->
+<section id="view-lista" class="view oculto">
+  <div class="barra-lista">
+    <h2>Máquinas Pendentes</h2>
+    <button id="btn-atualizar" type="button" title="Atualizar">🔄</button>
+  </div>
+  <ul id="lista-pendentes" class="lista"></ul>
+  <p id="lista-vazia" class="aviso oculto">Nenhuma máquina pendente. 🎉<br>
+    Instale o agente na estação e atualize a lista.</p>
+</section>
+
+<!-- ===== FORMULÁRIO DE VISTORIA ===== -->
+<section id="view-form" class="view oculto">
+  <button id="btn-voltar" class="btn-link" type="button">← Voltar à lista</button>
+  <form id="form-inventario" class="cartao">
+    <h2 id="form-titulo">Vistoria</h2>
+    <p class="mac" id="form-mac-label"></p>
+    <input type="hidden" id="f-mac">
+
+    <label>Nº de Património (etiqueta da CPU) *
+      <input type="text" id="f-patrimonio" required placeholder="ex.: PAT-00123">
+    </label>
+    <label>Secretaria / Setor *
+      <input type="text" id="f-setor" required placeholder="ex.: Secretaria de Saúde">
+    </label>
+    <label>Servidor responsável pelo uso *
+      <input type="text" id="f-responsavel" required placeholder="Nome do funcionário">
+    </label>
+    <label>Estado do Monitor *
+      <select id="f-monitor" required>
+        <option value="">Selecione…</option>
+        <option>BOM</option><option>REGULAR</option><option>RUIM</option><option>SEM MONITOR</option>
+      </select>
+    </label>
+    <label>Estado do Teclado e Rato *
+      <select id="f-teclado" required>
+        <option value="">Selecione…</option>
+        <option>BOM</option><option>REGULAR</option><option>RUIM</option><option>INCOMPLETO</option>
+      </select>
+    </label>
+
+    <label class="campo-foto">Foto da etiqueta / estação *
+      <input type="file" id="f-foto" accept="image/*" capture="environment" required>
+    </label>
+    <img id="foto-preview" class="oculto" alt="Pré-visualização da foto">
+
+    <div class="gps-box">
+      <span id="gps-status">📡 Obtendo localização GPS…</span>
+      <input type="hidden" id="f-lat">
+      <input type="hidden" id="f-lng">
+      <button type="button" id="btn-gps" class="btn-link">Tentar novamente</button>
+    </div>
+
+    <button type="submit" class="btn-primario" id="btn-submeter">Submeter Vistoria</button>
+    <p id="form-erro" class="erro"></p>
+  </form>
+</section>
+
+<div id="toast" class="toast oculto"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

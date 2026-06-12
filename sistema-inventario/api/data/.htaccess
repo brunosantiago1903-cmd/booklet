@@ -1,0 +1,2 @@
+# Nunca expor o banco de dados via web.
+Require all denied
