@@ -122,6 +122,19 @@ Limiares ajustáveis em `api/config.php` (`LIMIAR_DISCO`, `LIMIAR_RAM`, `OFFLINE
 - [ ] Senhas armazenadas com `password_hash` (bcrypt); acesso direto ao banco bloqueado
       (config do Apache na imagem Docker + `.htaccess` no caso XAMPP).
 
+## Limpeza automática da telemetria
+
+O histórico detalhado de telemetria é mantido por **90 dias** por padrão
+(`TELEMETRIA_RETENCAO_DIAS` no `.env`; `0` desativa). A limpeza roda sozinha
+uma vez por dia, junto com a chegada de telemetria — sem cron, sem manutenção.
+
+Para uma limpeza manual com compactação do banco (devolve espaço em disco):
+
+```bash
+docker compose exec app php /var/www/html/api/limpar_telemetria.php        # usa a retenção configurada
+docker compose exec app php /var/www/html/api/limpar_telemetria.php 30     # mantém só 30 dias
+```
+
 ## Notas técnicas
 
 - Timestamps armazenados em **UTC** (`datetime('now')` do SQLite).

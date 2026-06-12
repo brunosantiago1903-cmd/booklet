@@ -21,3 +21,7 @@ define('LIMIAR_RAM', 90);
 define('AGENT_KEY', getenv('AGENT_KEY') ?: '');
 
 define('MAX_FOTO_BYTES', 8 * 1024 * 1024);
+
+// Retenção do histórico de telemetria em dias (0 = nunca apagar).
+// A limpeza roda automaticamente uma vez por dia junto com a telemetria.
+define('TELEMETRIA_RETENCAO_DIAS', max(0, (int)(getenv('TELEMETRIA_RETENCAO_DIAS') ?: 90)));

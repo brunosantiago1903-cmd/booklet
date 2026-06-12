@@ -34,6 +34,8 @@ function rota_telemetria(): void
         round((float)$dados['uso_hd'], 1),
     ]);
 
+    limpeza_automatica($pdo);
+
     $stmt = $pdo->prepare('SELECT status_vinculo FROM estacoes_trabalho WHERE mac_address = ?');
     $stmt->execute([$mac]);
     json_response(['ok' => true, 'mac_address' => $mac, 'status_vinculo' => $stmt->fetchColumn()], 201);

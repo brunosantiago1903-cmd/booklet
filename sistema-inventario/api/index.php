@@ -7,6 +7,7 @@ require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/jwt.php';
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/limpeza.php';
 require_once __DIR__ . '/routes/login.php';
 require_once __DIR__ . '/routes/telemetria.php';
 require_once __DIR__ . '/routes/estacoes.php';

@@ -18,6 +18,7 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
       ADMIN_SENHA: ${ADMIN_SENHA:-}
       ADMIN_NOME: ${ADMIN_NOME:-Administrador}
+      TELEMETRIA_RETENCAO_DIAS: ${TELEMETRIA_RETENCAO_DIAS:-90}
     volumes:
       - dados:/var/www/html/api/data
       - uploads:/var/www/html/api/uploads
