@@ -1,17 +1,45 @@
-# Opção de deploy com Docker (alternativa ao XAMPP / php -S).
-# Sobe a aplicação completa em http://localhost:8080
-#   docker compose up -d
-#   docker compose exec app php /var/www/html/api/seed_admin.php admin@exemplo.gov.br SuaSenha "Administrador"
+# Sistema de Gestão de Ativos de TI — produção em Docker
+#
+#   1. cp .env.example .env   (e edite os valores)
+#   2. docker compose up -d --build
+#   3. Acesse http://localhost:8080
+#
+# Com túnel Cloudflare (HTTPS para o PWA no campo):
+#   docker compose --profile tunnel up -d --build
 services:
   app:
-    image: php:8.2-apache
+    build: .
     container_name: inventario-ti
     ports:
       - "8080:80"
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?Defina JWT_SECRET no arquivo .env}
+      AGENT_KEY: ${AGENT_KEY:-}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_SENHA: ${ADMIN_SENHA:-}
+      ADMIN_NOME: ${ADMIN_NOME:-Administrador}
     volumes:
-      - ./:/var/www/html
+      - dados:/var/www/html/api/data
+      - uploads:/var/www/html/api/uploads
     restart: unless-stopped
-    # Habilita .htaccess (FallbackResource da API) e inicia o Apache
-    command: >
-      bash -c "sed -ri 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
-      && apache2-foreground"
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # Túnel HTTPS da Cloudflare (ativado com: docker compose --profile tunnel up -d)
+  # Crie o túnel no painel Zero Trust e cole o token no .env.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: inventario-tunnel
+    profiles: ["tunnel"]
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  dados:
+  uploads:

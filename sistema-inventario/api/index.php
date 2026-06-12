@@ -28,6 +28,10 @@ $caminho = preg_replace('#^/api#', '', $caminho);
 $caminho = '/' . trim($caminho ?? '', '/');
 
 try {
+    if ($metodo === 'GET' && $caminho === '/health') {
+        getPDO(); // falha se o banco estiver inacessível
+        json_response(['ok' => true]);
+    }
     if ($metodo === 'POST' && $caminho === '/login') {
         rota_login();
     }

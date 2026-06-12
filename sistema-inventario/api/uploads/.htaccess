@@ -1,3 +1,6 @@
-# As fotos são servidas apenas pela rota GET /api/uploads/{arquivo} (via PHP).
-# Bloqueia acesso direto do Apache a esta pasta.
-Require all denied
+# As fotos têm nomes aleatórios (16 hex) e podem ser servidas diretamente.
+# Bloqueia apenas a execução de scripts e a listagem do diretório.
+Options -Indexes
+<FilesMatch "\.(php|phtml|phar)$">
+  Require all denied
+</FilesMatch>

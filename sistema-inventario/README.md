@@ -13,47 +13,56 @@ dependências externas: **PHP puro + SQLite** — roda em qualquer servidor com 
 | `dashboard/` | **Dashboard Web** | Painel admin: semáforo, mapa interativo, histórico, usuários, exportação |
 | `agente/` | **Agente Windows** | `coleta.ps1` + `install.bat` (tarefa agendada a cada 5 min) |
 
-## Início rápido (servidor embutido do PHP)
+## Produção com Docker (recomendado)
 
 ```bash
 cd sistema-inventario
 
-# 1. Criar o administrador inicial (o banco SQLite é criado automaticamente)
-php api/seed_admin.php admin@prefeitura.gov.br SuaSenhaForte "Administrador"
+# 1. Configurar segredos e administrador inicial
+cp .env.example .env
+nano .env        # JWT_SECRET, AGENT_KEY, ADMIN_EMAIL, ADMIN_SENHA
 
-# 2. Iniciar o servidor
-php -S 0.0.0.0:8000 router.php
+# 2. Subir o sistema (o admin é criado automaticamente na primeira subida)
+docker compose up -d --build
 ```
 
-- **Dashboard (admin):** http://localhost:8000/dashboard/
-- **PWA (técnicos):** http://localhost:8000/pwa/
-- **API:** http://localhost:8000/api/...
+- **Dashboard (admin):** http://localhost:8080/dashboard/
+- **PWA (técnicos):** http://localhost:8080/pwa/
+- **API:** http://localhost:8080/api/...
+
+O banco de dados e as fotos ficam em volumes Docker (`dados` e `uploads`) —
+sobrevivem a restarts, rebuilds e atualizações do container. Para backup:
+`docker run --rm -v sistema-inventario_dados:/d -v $(pwd):/backup alpine tar czf /backup/dados.tar.gz /d`
+
+### Exposição segura na internet (Cloudflare Tunnel, no próprio compose)
+
+Conforme a especificação, **não abra portas no firewall**. Crie um túnel no
+painel Cloudflare Zero Trust (Networks → Tunnels), aponte-o para
+`http://app:80`, cole o token no `.env` (`CLOUDFLARE_TUNNEL_TOKEN`) e suba com:
+
+```bash
+docker compose --profile tunnel up -d
+```
+
+O serviço `cloudflared` sobe junto com a aplicação e o Cloudflare emite o
+certificado SSL automaticamente no domínio da autarquia.
+
+## Alternativas sem Docker
+
+### Servidor embutido do PHP (desenvolvimento/testes)
+
+```bash
+php api/seed_admin.php admin@prefeitura.gov.br SuaSenhaForte "Administrador"
+php -S 0.0.0.0:8000 router.php
+# Dashboard: http://localhost:8000/dashboard/  ·  PWA: http://localhost:8000/pwa/
+```
 
 ### XAMPP / Apache
 
 Copie a pasta `sistema-inventario/` para o `htdocs/` (ou aponte o DocumentRoot
 para ela). O `api/.htaccess` já encaminha as rotas para o front controller —
-é necessário `AllowOverride All` no diretório.
-
-### Docker (opcional)
-
-```bash
-docker compose up -d
-docker compose exec app php /var/www/html/api/seed_admin.php admin@prefeitura.gov.br SuaSenhaForte
-# Acessar http://localhost:8080
-```
-
-## Exposição segura na internet (Cloudflare Tunnel)
-
-Conforme a especificação, **não abra portas no firewall**. Use o túnel da Cloudflare:
-
-```bash
-cloudflared tunnel --url http://localhost:8000
-```
-
-Para produção, crie um túnel nomeado vinculado ao domínio da autarquia
-(`cloudflared tunnel create inventario` + rota DNS). O Cloudflare emite o
-certificado SSL automaticamente.
+é necessário `AllowOverride All` no diretório. Edite `JWT_SECRET` e `AGENT_KEY`
+diretamente em `api/config.php`.
 
 > ⚠️ **HTTPS é obrigatório no campo:** os navegadores móveis bloqueiam a
 > **câmara** e o **GPS** em ligações inseguras (exceto `localhost`). O PWA só
@@ -107,10 +116,11 @@ Limiares ajustáveis em `api/config.php` (`LIMIAR_DISCO`, `LIMIAR_RAM`, `OFFLINE
 
 ## Segurança — checklist antes do deploy
 
-- [ ] **Trocar `JWT_SECRET`** em `api/config.php` por um valor longo e aleatório.
-- [ ] Definir `AGENT_KEY` em `api/config.php` e no `install.bat` (protege o endpoint de telemetria).
+- [ ] **Trocar `JWT_SECRET`** no `.env` (Docker) ou em `api/config.php` — ex.: `openssl rand -hex 32`.
+- [ ] Definir `AGENT_KEY` no `.env` e no `install.bat` (protege o endpoint de telemetria).
 - [ ] Usar HTTPS via Cloudflare Tunnel (obrigatório para câmara/GPS).
-- [ ] Senhas são armazenadas com `password_hash` (bcrypt); banco e uploads bloqueados por `.htaccess`.
+- [ ] Senhas armazenadas com `password_hash` (bcrypt); acesso direto ao banco bloqueado
+      (config do Apache na imagem Docker + `.htaccess` no caso XAMPP).
 
 ## Notas técnicas
 

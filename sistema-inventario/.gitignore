@@ -1,3 +1,4 @@
+.env
 api/data/*
 !api/data/.gitkeep
 !api/data/.htaccess

@@ -1,0 +1,6 @@
+.env
+.git
+api/data
+api/uploads
+agente
+README.md
