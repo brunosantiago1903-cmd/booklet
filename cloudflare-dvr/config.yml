@@ -1,0 +1,31 @@
+# Cloudflare Tunnel — Configuração para DVR Intelbras
+# Edite as variáveis abaixo e copie para ~/.cloudflared/config.yml
+#
+# Para aplicar mudanças: systemctl restart cloudflared
+
+tunnel: SEU_TUNNEL_ID_AQUI
+credentials-file: /root/.cloudflared/SEU_TUNNEL_ID_AQUI.json
+
+ingress:
+  # ── Interface web do DVR ─────────────────────────────────────────────────
+  - hostname: dvr.seudominio.com.br
+    service: http://192.168.1.100:80
+    originRequest:
+      connectTimeout: 30s
+      noTLSVerify: true         # DVR não tem TLS válido
+      httpHostHeader: 192.168.1.100
+      # disableChunkedEncoding evita problemas com firmware antigo do DVR
+      disableChunkedEncoding: true
+
+  # ── (Opcional) Segunda câmera / DVR extra ───────────────────────────────
+  # - hostname: cam2.seudominio.com.br
+  #   service: http://192.168.1.101:80
+  #   originRequest:
+  #     noTLSVerify: true
+
+  # ── (Opcional) Subpath para NVR/DVR com porta 8080 ─────────────────────
+  # - hostname: nvr.seudominio.com.br
+  #   service: http://192.168.1.100:8080
+
+  # Rota padrão obrigatória — NÃO REMOVA
+  - service: http_status:404
