@@ -6,7 +6,7 @@ set -euo pipefail
 
 # ─── CONFIGURAÇÕES ──────────────────────────────────────────────────────────
 DVR_IP="192.168.1.100"       # IP local do seu DVR Intelbras
-DVR_PORT="80"                # Porta da interface web do DVR (80 ou 8080)
+DVR_PORT="8080"              # Porta da interface web do DVR (80 ou 8080)
 TUNNEL_NAME="dvr-intelbras"  # Nome do túnel no Cloudflare
 DOMAIN="dvr.seudominio.com.br" # Seu domínio/subdomínio público
 CONFIG_DIR="$HOME/.cloudflared"
