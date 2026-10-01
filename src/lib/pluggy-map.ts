@@ -1,6 +1,6 @@
 import { addMonths, APP_TIME_ZONE, dateInTimeZone, invoiceFor, type ISODate } from "./dates";
 import { toCents } from "./money";
-import { looksLikeCardBillPayment, looksLikeRefund } from "./rules";
+import { classifyImported, type ImportedTransactionDraft } from "./import-drafts";
 
 /** Campos da Pluggy usados aqui (subconjunto de `Transaction` do pluggy-sdk). */
 export type PluggyTransactionLike = {
@@ -34,18 +34,7 @@ export type PluggyAccountLike = {
   } | null;
 };
 
-export type ImportedTransactionDraft = {
-  externalId: string;
-  amountCents: number;
-  date: ISODate;
-  description: string;
-  originalDescription: string;
-  status: "pending" | "cleared";
-  type: "income" | "expense" | "transfer";
-  invoiceMonth: ISODate | null;
-  installmentNumber: number | null;
-  installmentTotal: number | null;
-};
+export type { ImportedTransactionDraft };
 
 /**
  * Converte a data da Pluggy em data de calendário. Datas "puras" chegam como meia-noite UTC
@@ -78,17 +67,7 @@ export function mapPluggyTransaction(
   const description = (tx.description || tx.descriptionRaw || "Lançamento do banco").replace(/\s+/g, " ").trim();
   const meta = tx.creditCardMetadata ?? null;
 
-  let type: ImportedTransactionDraft["type"];
-  if (looksLikeCardBillPayment({ description, accountType: ctx.accountType, amountCents })) {
-    type = "transfer";
-  } else if (amountCents < 0) {
-    type = "expense";
-  } else if (ctx.accountType === "credit_card" && looksLikeRefund(description)) {
-    // Estorno no cartão: despesa com valor positivo, abate o gasto da categoria.
-    type = "expense";
-  } else {
-    type = "income";
-  }
+  const type = classifyImported({ description, accountType: ctx.accountType, amountCents });
 
   let invoiceMonth: ISODate | null = null;
   if (ctx.accountType === "credit_card") {
