@@ -38,9 +38,41 @@ e2e/                  teste de ponta a ponta com Supabase local (GoTrue + PostgR
 
 ## Implantação
 
+### Jeito rápido: um comando (recomendado)
+
+No seu computador, com Node.js 22 e o repositório clonado:
+
+```bash
+npm install
+npm run deploy
+```
+
+O script `scripts/deploy.mjs` faz tudo isto:
+- cria o projeto Supabase (São Paulo);
+- aplica o banco, desliga o cadastro público e cria os dois usuários;
+- gera os segredos;
+- configura todas as variáveis na Vercel e publica;
+- grava o `.env.local` para desenvolvimento.
+
+Ele vai pedir:
+- o **token de acesso da Supabase** (supabase.com/dashboard/account/tokens);
+- o **login na Vercel** (pelo navegador; ou defina `VERCEL_TOKEN`);
+- os **e-mails e senhas** de vocês dois;
+- a **chave da Anthropic** (opcional; também aceita `ANTHROPIC_API_KEY` no ambiente).
+
+Para ver tudo o que ele faria, sem executar nada:
+
+```bash
+npm run deploy -- --dry-run
+```
+
+A senha do banco fica em `.env.deploy`. Não versione esse arquivo.
+
+### Jeito manual
+
 Tempo estimado: 30–40 minutos. Você precisa de contas na Supabase, na Vercel e na Anthropic. A Pluggy é opcional, para a sincronização automática com o banco.
 
-### 1. Supabase (banco, login e arquivos)
+#### 1. Supabase (banco, login e arquivos)
 
 1. Crie um projeto em [supabase.com](https://supabase.com) (região São Paulo, se disponível).
 2. Aplique o esquema. Escolha uma das opções:
@@ -58,13 +90,13 @@ Tempo estimado: 30–40 minutos. Você precisa de contas na Supabase, na Vercel 
    ```
    Alternativa: no painel, **Authentication → Users → Add user**, marcando "Auto Confirm User".
 
-### 2. Anthropic (leitura de comprovantes e categorização)
+#### 2. Anthropic (leitura de comprovantes e categorização)
 
 Crie uma chave em [console.anthropic.com](https://console.anthropic.com). A cobrança é por uso, separada da assinatura do claude.ai.
 
 Sem a chave o app funciona, mas os comprovantes ficam para preencher à mão e não há categorização por IA.
 
-### 3. Segredos do app
+#### 3. Segredos do app
 
 ```bash
 # APP_ENCRYPTION_KEY: criptografa o Client Secret da Pluggy no banco
@@ -73,7 +105,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"
 ```
 
-### 4. Vercel (hospedagem)
+#### 4. Vercel (hospedagem)
 
 1. Em [vercel.com/new](https://vercel.com/new), importe este repositório (framework: Next.js).
 2. Cadastre as variáveis de ambiente (modelo em `.env.example`):
@@ -92,15 +124,15 @@ node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"
 4. A sincronização e a conexão com o banco usam até 300 s (`maxDuration`). Isso exige o **Fluid Compute**, padrão em projetos novos da Vercel. Se o deploy reclamar do limite, ative-o em **Settings → Functions**.
 5. No Supabase, em **Authentication → URL Configuration**, coloque a URL da Vercel em "Site URL".
 
-### 5. Primeiro uso
+### Primeiro uso
 
 1. Abra a URL no celular e entre com e-mail e senha. No primeiro acesso, o app cria a "casa" e as categorias padrão.
 2. Instale o app:
    - **iPhone**: Safari → Compartilhar → "Adicionar à Tela de Início".
    - **Android**: Chrome → ⋮ → "Instalar app".
-3. Cadastre as contas e os cartões, ou conecte o banco (passo 6).
+3. Cadastre as contas e os cartões, ou conecte o banco (seção abaixo).
 
-### 6. Open Finance pelo Meu Pluggy (opcional)
+### Open Finance pelo Meu Pluggy (opcional)
 
 Cada pessoa conecta o próprio CPF:
 

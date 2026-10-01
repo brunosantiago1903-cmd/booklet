@@ -10,7 +10,8 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:db": "bash scripts/test-db.sh",
-    "create-user": "node scripts/create-user.mjs"
+    "create-user": "node scripts/create-user.mjs",
+    "deploy": "node scripts/deploy.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
