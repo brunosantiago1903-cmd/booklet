@@ -4,16 +4,19 @@ export type CategoryRule = { pattern: string; categoryId: string };
 
 /**
  * Aplica as regras do casal: vence o trecho mais longo contido na descrição.
- * A comparação ignora acentos, caixa e pontuação, e respeita limites de palavra.
+ * A comparação ignora acentos, caixa e pontuação, e casa o trecho em qualquer posição
+ * (extratos juntam palavras: "SUPERMERCADO", "IFOODCOM").
  */
 export function matchRule(description: string, rules: CategoryRule[]): string | null {
-  const text = ` ${normalizeText(description)} `;
-  let best: CategoryRule | null = null;
+  const text = normalizeText(description);
+  const compact = text.replace(/ /g, "");
+  let best: { categoryId: string; length: number } | null = null;
   for (const rule of rules) {
     const pattern = normalizeText(rule.pattern);
     if (pattern.length < 2) continue;
-    if (text.includes(` ${pattern} `) && (!best || pattern.length > normalizeText(best.pattern).length)) {
-      best = rule;
+    const matches = text.includes(pattern) || compact.includes(pattern.replace(/ /g, ""));
+    if (matches && (!best || pattern.length > best.length)) {
+      best = { categoryId: rule.categoryId, length: pattern.length };
     }
   }
   return best?.categoryId ?? null;

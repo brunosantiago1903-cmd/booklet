@@ -16,7 +16,7 @@ import {
   listCategories,
   listTransactions,
 } from "@/lib/data";
-import { monthRange, todayISO } from "@/lib/dates";
+import { addDays, monthRange, todayISO } from "@/lib/dates";
 import { monthFromParam } from "@/lib/month-param";
 import { formatCents } from "@/lib/money";
 import { summarizeMonth } from "@/lib/reports";
@@ -32,8 +32,9 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
     await Promise.all([
       listAccounts(supabase),
       listCategories(supabase),
-      listTransactions(supabase, { start, end, limit: 5000 }),
-      listTransactions(supabase, { limit: 6 }),
+      listTransactions(supabase, { start, end, limit: 1000 }),
+      // Só até hoje: parcelas futuras não são "últimos lançamentos".
+      listTransactions(supabase, { end: addDays(today, 1), limit: 6 }),
       listBudgets(supabase),
       countUncategorized(supabase, start, end),
       listBankConnections(supabase),

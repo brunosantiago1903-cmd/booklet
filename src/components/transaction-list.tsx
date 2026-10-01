@@ -48,7 +48,9 @@ export function TransactionRow({ tx, ctx }: { tx: Transaction; ctx: ListContext 
         <Amount cents={tx.amount_cents} kind={kind} />
         <span className="flex gap-1 text-muted">
           {tx.receipt_id && <FileIcon size={14} aria-label="com comprovante" />}
-          {(tx.source === "open_finance" || tx.source === "ofx") && <BankIcon size={14} aria-label="do banco" />}
+          {(tx.source === "open_finance" || tx.source === "ofx" || tx.external_id) && (
+            <BankIcon size={14} aria-label="conferido com o banco" />
+          )}
         </span>
       </div>
     </Link>

@@ -113,7 +113,7 @@ export function TransactionForm({
 
       <fieldset>
         <legend className="mb-1.5 text-sm font-medium text-ink-2">Tipo</legend>
-        <div className="grid grid-cols-4 gap-1 rounded-xl bg-surface-2 p-1" role="radiogroup">
+        <div className="grid grid-cols-2 gap-1 rounded-xl bg-surface-2 p-1 sm:grid-cols-4" role="radiogroup">
           {kinds.map((k) => (
             <button
               key={k.value}

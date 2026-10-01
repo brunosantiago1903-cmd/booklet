@@ -2,6 +2,10 @@ import Link from "next/link";
 import { addMonthsToKey, formatMonthBR, type MonthKey } from "@/lib/dates";
 import { ChevronLeftIcon, ChevronRightIcon } from "./icons";
 
+function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 /** Navegação de mês por links (?mes=YYYY-MM), preservando os demais filtros. */
 export function MonthSwitcher({
   month,
@@ -25,7 +29,7 @@ export function MonthSwitcher({
       <Link href={href(addMonthsToKey(month, -1))} className={linkClass} aria-label="Mês anterior">
         <ChevronLeftIcon />
       </Link>
-      <span className="min-w-28 text-center text-sm font-semibold capitalize">{formatMonthBR(month)}</span>
+      <span className="min-w-28 text-center text-sm font-semibold">{capitalize(formatMonthBR(month))}</span>
       <Link href={href(addMonthsToKey(month, 1))} className={linkClass} aria-label="Próximo mês">
         <ChevronRightIcon />
       </Link>

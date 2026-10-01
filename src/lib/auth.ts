@@ -36,20 +36,27 @@ export const getAppContext = cache(async (): Promise<AppContext> => {
   if (!userId) redirect("/login");
   const email = String(data.claims.email ?? "").toLowerCase();
 
-  const memberQuery = () =>
-    supabase.from("members").select("id, household_id, display_name, email").eq("user_id", userId).maybeSingle();
+  const memberQuery = async (householdId?: string) => {
+    let query = supabase.from("members").select("id, household_id, display_name, email").eq("user_id", userId);
+    // Filtro extra muda a URL: o Next memoiza GETs idênticos na mesma renderização,
+    // e a releitura após o vínculo devolveria o resultado vazio anterior.
+    if (householdId) query = query.eq("household_id", householdId);
+    const { data: row, error } = await query.maybeSingle();
+    if (error) throw new Error(`Não foi possível carregar o membro: ${error.message}`);
+    return row;
+  };
 
-  let { data: member } = await memberQuery();
+  let member = await memberQuery();
   if (!member) {
     if (!email || !allowedEmails().has(email)) redirect("/sem-acesso");
     const admin = createAdminClient();
-    const { error } = await admin.rpc("bootstrap_member", {
+    const { data: householdId, error } = await admin.rpc("bootstrap_member", {
       p_user_id: userId,
       p_email: email,
       p_display_name: displayNameFromEmail(email),
     });
-    if (error) throw new Error(`Não foi possível vincular o usuário: ${error.message}`);
-    ({ data: member } = await memberQuery());
+    if (error || !householdId) throw new Error(`Não foi possível vincular o usuário: ${error?.message ?? "sem retorno"}`);
+    member = await memberQuery(householdId);
     if (!member) throw new Error("Vínculo criado, mas o membro não foi encontrado.");
   }
 

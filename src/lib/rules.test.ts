@@ -27,9 +27,11 @@ describe("matchRule", () => {
     expect(matchRule("Uber *Trip", rules)).toBe("transporte");
   });
 
-  it("respeita limite de palavra", () => {
+  it("casa o trecho dentro de palavras e com espaços diferentes", () => {
     expect(matchRule("POSTO SHELL", rules)).toBe("combustivel");
-    expect(matchRule("COMPOSTO QUIMICO", rules)).toBeNull();
+    expect(matchRule("SUPERMERCADO EXTRA", [{ pattern: "mercado", categoryId: "merc" }])).toBe("merc");
+    expect(matchRule("IFOODCOM AGENCIA", [{ pattern: "ifood com", categoryId: "delivery" }])).toBe("delivery");
+    expect(matchRule("FARMACIA", rules)).toBeNull();
   });
 
   it("ignora acentos e caixa", () => {
